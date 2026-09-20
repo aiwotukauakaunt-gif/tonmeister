@@ -8,6 +8,11 @@ Web 版は **ブラウザの加工を明示的に全部切る**ことを最優�
 
 ## 開き方
 
+**公開版（https）** — GitHub Pages に `web/` がそのまま載る（`.github/workflows/pages.yml`）。
+マイクは https か localhost でしか使えないので、スマホや別の PC から使うにはこちら。ホーム画面に置けば PWA として開く。
+
+**手元で**
+
 ```bash
 node web/serve.js
 ```
