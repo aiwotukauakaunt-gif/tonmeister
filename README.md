@@ -4,7 +4,7 @@
 Windows デスクトップ版 → Web 版 → スマホ版 の順に作る。
 
 - **Windows デスクトップ版** … このページ。`app\Tonmeister.exe`
-- **Web 版** … `web/`（[web/README.md](web/README.md)）。`node web/serve.js` で開く。
+- **Web 版** … `web/`（[web/README.md](web/README.md)）。公開版 <https://aiwotukauakaunt-gif.github.io/tonmeister/>、手元では `node web/serve.js`。
   生フレーム取得（再標本化ゼロ）・True Peak・OPFS への同期追記・「素／仕上げ」の2層（段階ダイヤル・ホールの響き・盛り度の実測・B で瞬時に素）。keyboard への統合はこちらが元になる
 
 ## 起動
@@ -446,7 +446,7 @@ desktop/InstRecorder/
 
 - **Web 版** … 出来た。`web/` にある（[web/README.md](web/README.md)）。デスクトップ版と同じものに加えて、
   生フレーム取得・True Peak・素／仕上げ・スイープ測定・BWF・FLAC・持ち込み・PWA まで。ASIO / WASAPI 排他だけは仕組み上ない
-- **スマホ版** … Web 版が PWA として動く。公開（https）してホーム画面に置く
+- **スマホ版** … Web 版が PWA として動く。<https://aiwotukauakaunt-gif.github.io/tonmeister/> をホーム画面に置く
 - **デスクトップ版への逆輸入の続き** … 盛り度・スイープ測定・経路の格
 
 ## 既知の制約
