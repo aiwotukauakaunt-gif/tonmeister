@@ -71,6 +71,7 @@ export const state = {
   latencyAutoDone: false,
   grade: null, grading: false, gradeAt: 0,   // 経路の格
   trial: false,
+  practiceItem: '',               // keyboard で計測中の練習項目（録り始めたときに控え、テイク名に添える）
   verify: null,                              // 最後の経路検証の結果（録音証明に載せる）
   measureMode: 'loopback', measureBusy: false, lastResponse: null, lastRoom: null, lastTone: null,
   compare: [null, null, null],

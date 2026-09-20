@@ -11,6 +11,7 @@
 import { effectiveGain, hasFinishing } from './model.js';
 import { cachedImpulse, toAudioBuffer, hallName, defaultSeconds } from './reverb.js';
 import { buildCalibrationFir } from './miccal.js';
+import { T } from './i18n.js';
 
 /* マイク補正の FIR は同じ較正・同じレートなら使い回す */
 const firCache = new Map();
@@ -58,12 +59,12 @@ export function markCustom(session) {
 export function summarize(session) {
   const f = session.finish;
   const parts = [];
-  if (f.rumbleCut) parts.push('風音カット');
-  if (session.tracks.some(t => t.processing.humEnabled)) parts.push('ハム除去');
-  if (session.tracks.some(t => t.processing.gateEnabled)) parts.push('ゲート');
-  if (f.reverb.enabled && f.reverb.amount > 0) parts.push(`${hallName(f.reverb.hall)} ${(f.reverb.seconds || defaultSeconds(f.reverb.hall)).toFixed(1)}秒・量 ${Math.round(f.reverb.amount * 100)}%`);
-  if (f.normalizeEnabled) parts.push(`音量そろえ ${f.normalizeTargetDb} dBTP`);
-  if (f.micCorrection && f.micCal) parts.push(`マイク補正（戻し：${f.micCal.name || '較正ファイル'}）`);
+  if (f.rumbleCut) parts.push(T('風音カット'));
+  if (session.tracks.some(t => t.processing.humEnabled)) parts.push(T('ハム除去'));
+  if (session.tracks.some(t => t.processing.gateEnabled)) parts.push(T('ゲート'));
+  if (f.reverb.enabled && f.reverb.amount > 0) parts.push(T('{hall} {sec}秒・量 {pct}%', { hall: T(hallName(f.reverb.hall)), sec: (f.reverb.seconds || defaultSeconds(f.reverb.hall)).toFixed(1), pct: Math.round(f.reverb.amount * 100) }));
+  if (f.normalizeEnabled) parts.push(T('音量そろえ {db} dBTP', { db: f.normalizeTargetDb }));
+  if (f.micCorrection && f.micCal) parts.push(T('マイク補正（戻し：{name}）', { name: f.micCal.name || T('較正ファイル') }));
   return parts;
 }
 
@@ -254,11 +255,11 @@ export function measureFinish(pure, fin) {
 /** 測った結果を一言に。 */
 export function describeMeasure(m) {
   if (!m) return '';
-  if (m.identical || m.grade === '無') return '素と1サンプルも違いません。';
+  if (m.identical || m.grade === '無') return T('素と1サンプルも違いません。');
   const parts = [];
-  parts.push(`音量 ${m.gainDb >= 0 ? '+' : ''}${m.gainDb.toFixed(1)} dB`);
-  parts.push(`音の変化 ${isFinite(m.residualDb) ? m.residualDb.toFixed(0) : '-inf'} dB（素に対して）`);
-  if (m.tailSeconds > 0.05) parts.push(`尾 ${m.tailSeconds.toFixed(1)} 秒`);
-  if (Math.abs(m.quietDb) >= 1) parts.push(`静かな部分 ${m.quietDb >= 0 ? '+' : ''}${m.quietDb.toFixed(0)} dB`);
+  parts.push(T('音量 {db} dB', { db: `${m.gainDb >= 0 ? '+' : ''}${m.gainDb.toFixed(1)}` }));
+  parts.push(T('音の変化 {db} dB（素に対して）', { db: isFinite(m.residualDb) ? m.residualDb.toFixed(0) : '-inf' }));
+  if (m.tailSeconds > 0.05) parts.push(T('尾 {sec} 秒', { sec: m.tailSeconds.toFixed(1) }));
+  if (Math.abs(m.quietDb) >= 1) parts.push(T('静かな部分 {db} dB', { db: `${m.quietDb >= 0 ? '+' : ''}${m.quietDb.toFixed(0)}` }));
   return parts.join('／');
 }

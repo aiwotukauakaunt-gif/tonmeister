@@ -202,7 +202,7 @@ node web/serve.js
 - 文字は一段大きく（15px）、行間を広く
 
 **スマホ・PWA**
-- `manifest.json` と `sw.js` でホーム画面に置けて、オフラインでも開く（ネットワーク優先 → 失敗したらキャッシュ。keyboard と同じ型）
+- `manifest.json` と `sw.js` でホーム画面に置けて、オフラインでも開く（ネットワーク優先 → 失敗したらキャッシュ。keyboard と同じ型）。`sw.js` の資源一覧と CACHE 名は `tools/build_sw.py` が中身から作る（GitHub Pages への配信のたびに走るので、上げ忘れが無い）
 - 820px 以下では縦に積む：レーンの下にインスペクタ、トランスポートは折り返し、窓は全画面、押すものは 40px 以上
 - iOS Safari など操作なしでは音を開けない環境では「タップして始める」を出す。生取得・wakeLock・フォルダが無い環境では、最初に一度「この環境では〜」と正直に言う
 
@@ -216,7 +216,8 @@ node web/serve.js
 - **keyboard の音も録る** — 鍵盤・メトロノーム・伴奏ループ・ドローン（親のアプリ音バス）を、マイクの録りと同じ合図で**別のトラック**「keyboard の音」に録る（`js/side.js`）。マイクの経路には触らない。モノラル・1 GB で打ち止め
 - 揃え方：生フレーム取得のときは、マイクと同じ Worker で受け、`AudioData.timestamp`（同じ時計）でマイクの開始・停止と同じ時刻に切る。2 つの経路（Worker と AudioContext）の遅れの違いに左右されず、**標本の単位で揃う**（合成音の検証で差 0）。AudioContext 経由のときは同じ AudioContext の worklet で受ける
 - 置く位置：本線の「押す前の音」ぶん後ろへ。1本目はさらにズレ合わせで測った往復の遅れぶん後ろへ（奏者が聞いて合わせたクリックの位置に演奏が揃う）。重ね録りは本線の頭を往復ぶん捨ててあるので、そのまま
-- 言語は親に追従（`<html lang>` を見る）。録音を始めると親の練習記録の計測が始まる。自分の Service Worker は登録しない（親のが `record/` も持つ）
+- 言語は親に追従（`<html lang>` を見る）。配色も親に追従：`css/host-keyboard.css` が theme.css の変数を keyboard のライト／ダークに差し替える（canvas の色も `js/palette.js` 経由で CSS 変数から引く）。自分の Service Worker は登録しない（親のが `record/` も持つ）
+- 練習記録との行き来：録音を始めると親の計測が始まり、計測中のメニュー項目名がテイク名に添えられる（「1回目の録り（ロングトーン）」）。1本録り終えると親の「今日」に本数と長さが残る
 - 写し方：`python web/tools/sync_keyboard.py` が `web/` → `Keyboard/record/` を同期し、keyboard の `sw.js` の資源一覧と CACHE 名（中身のハッシュ）を書き換える。開発の本拠はこちら
 
 **キーボード操作** — デスクトップ版と同じ（Space / R / Esc / Ctrl+S / Ctrl+M / Ctrl+N）に加えて
@@ -307,6 +308,10 @@ web/
     engine.js         入力の開閉・録音・再生（素／仕上げの2経路）・モニター・ズレ合わせ・ドリフト（RecorderEngine）
     side.js           脇の録り（keyboard のアプリ音を別トラックに）
     host.js           親アプリ（keyboard）との橋渡し
+    palette.js        canvas の色を CSS 変数から引く
+  css/host-keyboard.css   keyboard の中で開いたときの配色（ライト／ダーク）
+  tools/build_sw.py       sw.js の資源一覧と CACHE 名を中身から作る（配信時にも走る）
+  tools/sync_keyboard.py  web/ → Keyboard/record/ の同期
     finish.js         仕上げの一式：段階ダイヤル・2経路の配線・盛り度の測定
     quality.js        経路の格（開いた瞬間の判定）と試し弾きの助言
     importer.js       持ち込み（session.json ＋ WAV、1本の WAV）

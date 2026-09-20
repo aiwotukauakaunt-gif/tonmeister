@@ -25,6 +25,11 @@ NOT_CACHED = {'sw.js', 'manifest.json', 'selftest.html', 'js/selftest.js', 'READ
 if not os.path.isdir(KB):
     sys.exit(f'keyboard のフォルダが見つかりません: {KB}')
 
+# まず自分の sw.js を作り直す（単体で開いたときの資源一覧も、同じ中身で揃える）
+sys.path.insert(0, HERE)
+import build_sw
+build_sw.build()
+
 def walk(base):
     out = []
     for dp, dns, fns in os.walk(base):

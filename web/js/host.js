@@ -70,6 +70,21 @@ export function hostStream() {
   } catch { return null; }
 }
 
+/** 親のライト／ダーク（<html data-theme>）をこちらへ写し、変わったら追従する。 */
+export function watchHostTheme(onChange) {
+  if (!host.active) return;
+  try {
+    const root = host.parent.document.documentElement;
+    const apply = () => {
+      const t = root.dataset.theme;
+      if (t) document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme;
+      if (onChange) onChange(t || '');
+    };
+    apply();
+    new MutationObserver(apply).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+  } catch { }
+}
+
 /** 親の AudioContext のサンプルレート（アプリ音の元のレート）。 */
 export function hostRate() {
   try { return host.parent.KB.audio.ctx ? host.parent.KB.audio.ctx.sampleRate : 0; } catch { return 0; }
@@ -79,6 +94,18 @@ export function hostRate() {
 export function hostRecordingStarted() {
   if (!host.active) return;
   try { const KB = host.parent.KB; if (typeof KB.autoStartLog === 'function') KB.autoStartLog(); } catch { }
+}
+
+/** 親でいま計測中の練習メニューの項目名（テイク名に添える）。無ければ ''。 */
+export function hostPracticeItem() {
+  if (!host.active) return '';
+  try { const KB = host.parent.KB; return typeof KB.practiceItem === 'function' ? String(KB.practiceItem() || '') : ''; } catch { return ''; }
+}
+
+/** 1本録り終えたことを親に知らせる（今日の記録に本数と長さが残る）。 */
+export function hostTakeRecorded(info) {
+  if (!host.active) return;
+  try { const KB = host.parent.KB; if (typeof KB.studioTake === 'function') KB.studioTake(info); } catch { }
 }
 
 /** 親に一言（トースト）。親に無ければ黙る。 */

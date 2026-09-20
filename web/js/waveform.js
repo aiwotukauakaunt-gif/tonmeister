@@ -6,6 +6,8 @@
   一度読んだ波形は覚えておき、タブを行き来しても読み直さない（WaveformCache）。
 */
 
+import { P, alpha } from './palette.js';
+
 export const FRAMES_PER_BUCKET = 256;
 
 export function build(audio) {
@@ -94,15 +96,15 @@ export function draw(canvas, wave, opts = {}) {
   if (opts.selection && opts.selection[1] > opts.selection[0]) {
     const x0 = (opts.selection[0] - from) / span * w;
     const x1 = (opts.selection[1] - from) / span * w;
-    ctx.fillStyle = 'rgba(78,124,181,.33)';
+    ctx.fillStyle = alpha(P.blue(), .33);
     ctx.fillRect(x0, 0, x1 - x0, h);
-    ctx.strokeStyle = '#4E7CB5';
+    ctx.strokeStyle = P.blue();
     ctx.lineWidth = 1;
     ctx.strokeRect(x0 + .5, .5, x1 - x0 - 1, h - 1);
   }
 
   if (wave && wave.bucketCount > 0) {
-    ctx.strokeStyle = opts.color || '#C9A227';
+    ctx.strokeStyle = opts.color || P.good();
     ctx.globalAlpha = 0.8;
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -134,14 +136,14 @@ export function draw(canvas, wave, opts = {}) {
   }
 
   // 中心線
-  ctx.strokeStyle = 'rgba(90,78,51,.5)';
+  ctx.strokeStyle = alpha(P.waveLine(), .5);
   ctx.beginPath();
   ctx.moveTo(0, mid + .5); ctx.lineTo(w, mid + .5);
   ctx.stroke();
 
   // 落ちた場所の印（深紅の小さな旗）。隠さないために描く
   if (opts.marks && opts.marks.length) {
-    ctx.fillStyle = '#A03A2E';
+    ctx.fillStyle = P.rec();
     for (const m of opts.marks) {
       if (m < from || m > to) continue;
       const x = (m - from) / span * w;
@@ -152,7 +154,7 @@ export function draw(canvas, wave, opts = {}) {
 
   // 「ここ良かった」の印（金の小さな旗）
   if (opts.goldMarks && opts.goldMarks.length) {
-    ctx.fillStyle = '#C9A227';
+    ctx.fillStyle = P.good();
     for (const m of opts.goldMarks) {
       if (m < from || m > to) continue;
       const x = (m - from) / span * w;
@@ -164,7 +166,7 @@ export function draw(canvas, wave, opts = {}) {
   // 再生位置
   if (opts.playhead != null && opts.playhead >= from && opts.playhead <= to) {
     const x = (opts.playhead - from) / span * w;
-    ctx.strokeStyle = '#A03A2E';
+    ctx.strokeStyle = P.rec();
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(x, 0); ctx.lineTo(x, h);

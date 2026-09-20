@@ -5,6 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tonmeister — 録音</title>
 <link rel="stylesheet" href="css/theme.css">
+<script>
+  // keyboard の中（?host=keyboard）なら、最初の描画の前に keyboard の配色を重ねる（黒漆が一瞬見えないように）
+  (function () {
+    var q = new URLSearchParams(location.search);
+    if (q.get('host') !== 'keyboard') return;
+    var l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'css/host-keyboard.css'; document.head.appendChild(l);
+    document.documentElement.classList.add('hosted', 'hosted-keyboard');
+    try {
+      var t = window.parent && window.parent !== window && window.parent.document.documentElement.dataset.theme;
+      if (t) document.documentElement.dataset.theme = t;
+    } catch (e) { }
+  })();
+</script>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0C0B09">
 <meta name="apple-mobile-web-app-capable" content="yes">

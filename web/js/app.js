@@ -22,7 +22,8 @@ import * as Sweep from './sweep.js';
 import * as MicCal from './miccal.js';
 import * as Importer from './importer.js';
 import { T, setLang, applyStatic, currentLang } from './i18n.js';
-import { host, detectHost, hostLang, watchHostLang } from './host.js';
+import { host, detectHost, hostLang, watchHostLang, watchHostTheme } from './host.js';
+import { resetPalette } from './palette.js';
 import { encodeFlac } from './flac.js';
 import { $, $$, ask, audioCache, autoSave, busy, engine, hideNotice, loadLatestOrNewSession, recoverOrphans, saveSession, saveTakeAudio, setSession, setText, show, showError, showNotice, state, unbusy } from './ui/context.js';
 import { analyzeTrack, checkProcessing, compareRecord, measureSilence, measureSweep, measureTone, openCompare, openDiagnostics, openMeasure, renderCompare, updateMeasureUi, verifyPath } from './ui/diagnostics.js';
@@ -40,6 +41,8 @@ export async function init() {
     const l = hostLang();
     if (l) setLang(l);
     watchHostLang((l2) => { setLang(l2); toggleLangTo(l2); });
+    // 配色が変わったら canvas も描き直す（色は CSS 変数から引いている）
+    watchHostTheme(() => { resetPalette(); requestAnimationFrame(() => { drawScale(); drawRuler(); redrawLanes(); drawEditor(); buildOrnaments(); }); });
     show($('#btn-lang'), false);
     show($('#row-host'), true);
   }

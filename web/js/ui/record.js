@@ -3,6 +3,7 @@
   app.js から動きを変えずに分けたもの。共有の状態は context.js。
 */
 
+import { P, alpha, color } from '../palette.js';
 import { Engine, delay } from '../engine.js';
 import * as store from '../store.js';
 import * as M from '../model.js';
@@ -19,7 +20,7 @@ import * as Sweep from '../sweep.js';
 import * as MicCal from '../miccal.js';
 import * as Importer from '../importer.js';
 import { T, setLang, applyStatic, currentLang } from '../i18n.js';
-import { host, hostStream, hostRate, hostRecordingStarted } from '../host.js';
+import { host, hostStream, hostRate, hostRecordingStarted, hostPracticeItem, hostTakeRecorded } from '../host.js';
 import { encodeFlac } from '../flac.js';
 import { $, $$, LIVE_CAPACITY, ask, audioCache, busy, engine, hideNotice, loadTake, saveSession, saveTakeAudio, setText, show, showError, showNotice, state, unbusy } from './context.js';
 import { openDiagnostics } from './diagnostics.js';
@@ -338,7 +339,7 @@ export function drawGuilloche() {
   const ctx = cv.getContext('2d');
   const cx = 260, cy = 260;
   ctx.clearRect(0, 0, 520, 520);
-  ctx.strokeStyle = '#C9A227';
+  ctx.strokeStyle = P.good();
   ctx.lineWidth = 0.6;
 
   // 半径のわずかに違う輪を重ねると、彫金の唐草のような編み目になる
@@ -363,7 +364,7 @@ export function drawRosette() {
   const ctx = $('#rosette').getContext('2d');
   const c = 11;
   ctx.clearRect(0, 0, 22, 22);
-  ctx.strokeStyle = '#C9A227';
+  ctx.strokeStyle = P.good();
   ctx.globalAlpha = 0.75;
   ctx.lineWidth = 1;
   ctx.beginPath();
@@ -374,7 +375,7 @@ export function drawRosette() {
   }
   ctx.stroke();
   ctx.globalAlpha = 1;
-  ctx.fillStyle = '#C9A227';
+  ctx.fillStyle = P.good();
   ctx.beginPath();
   ctx.arc(c, c, 3, 0, Math.PI * 2);
   ctx.fill();
@@ -397,14 +398,14 @@ export function drawRing(ratio) {
     ctx.arc(cx, cy, r, fromDeg * Math.PI / 180, (fromDeg + sweepDeg) * Math.PI / 180);
     ctx.stroke();
   };
-  arc(RING_START, RING_SWEEP, '#4A4130', 13);
+  arc(RING_START, RING_SWEEP, P.ringTrack(), 13);
   // 「ちょうどいい」帯は固定表示。ここに収めるのが目標だと目で分かるようにする。
-  arc(RING_START + RING_SWEEP * Meter.GoodFrom, RING_SWEEP * (Meter.GoodTo - Meter.GoodFrom), 'rgba(201,162,39,.6)', 13);
+  arc(RING_START + RING_SWEEP * Meter.GoodFrom, RING_SWEEP * (Meter.GoodTo - Meter.GoodFrom), P.goodBand(), 13);
 
   if (ratio > 0.001) {
     const grad = ctx.createLinearGradient(0, 0, 290, 0);
-    grad.addColorStop(0, '#7A6119');
-    grad.addColorStop(1, '#C9A227');
+    grad.addColorStop(0, P.levelFrom());
+    grad.addColorStop(1, P.good());
     arc(RING_START, RING_SWEEP * ratio, grad, 13);
   }
 }
@@ -425,7 +426,7 @@ export function drawScale() {
   for (const db of [-60, -40, -30, -18, -8, 0]) {
     const target = db === Meter.GoodFromDb || db === Meter.GoodToDb;
     const x = w * Meter.ratio(db);
-    ctx.strokeStyle = target ? '#C9A227' : '#9E937A';
+    ctx.strokeStyle = target ? P.good() : P.faint();
     ctx.lineWidth = target ? 1.5 : 1;
     ctx.beginPath();
     ctx.moveTo(x, 0);
@@ -434,7 +435,7 @@ export function drawScale() {
 
     const label = String(db);
     const tw = ctx.measureText(label).width;
-    ctx.fillStyle = target ? '#C9A227' : '#9E937A';
+    ctx.fillStyle = target ? P.good() : P.faint();
     ctx.fillText(label, Math.min(Math.max(0, x - tw / 2), w - tw), 7);
   }
 }
@@ -458,7 +459,7 @@ export function drawLiveWave() {
   const { ctx, w, h } = Wave.fitCanvas(cv);
   const mid = h / 2;
 
-  ctx.strokeStyle = 'rgba(160,58,46,.9)';
+  ctx.strokeStyle = alpha(P.rec(), .9);
   ctx.lineWidth = 2;
   ctx.beginPath();
   // 直近ぶんを右詰めで描く。左へ流れていくので「録れている」が動きで分かる。
@@ -472,7 +473,7 @@ export function drawLiveWave() {
   }
   ctx.stroke();
 
-  ctx.strokeStyle = '#fff';
+  ctx.strokeStyle = color('--fg', '#fff');
   ctx.beginPath();
   ctx.moveTo(w - 1, 0); ctx.lineTo(w - 1, h);
   ctx.stroke();
@@ -543,6 +544,7 @@ export async function startRecording(forceTarget) {
   }
   acquireWakeLock();
   hostRecordingStarted();
+  state.practiceItem = hostPracticeItem();
 
   setText($('#txt-rec-target'),
     target ? `「${target.name}」に録り足しています`
@@ -646,6 +648,8 @@ export async function addRecordedTakes(recorded, target) {
     offset += a.seconds;
   }
   state.pendingMarkers = [];
+  if (firstTrack) hostTakeRecorded({ seconds: recorded.seconds, name: firstTrack.name, item: state.practiceItem || null });
+  state.practiceItem = '';
   if (recorded.side && recorded.side.seconds > 0.01) await addSideTake(recorded);
   if (recorded.prerollSeconds > 0.05) {
     showNotice(T('押す前の {sec} 秒も含めて残しました。', { sec: recorded.prerollSeconds.toFixed(1) }), false);
@@ -663,11 +667,13 @@ export async function addRecordedTake(recorded, target, suffix = '', { startSeco
 
   const save = state.settings.saveFormat;
   const audioId = await saveTakeAudio(recorded, save);
-  const name = (target ? `${target.takes.length + 1}回目の録り` : '1回目の録り') + suffix;
+  const item = !provenance && state.practiceItem ? `（${state.practiceItem}）` : '';
+  const name = (target ? `${target.takes.length + 1}回目の録り` : '1回目の録り') + suffix + item;
   const take = M.newTake(name, audioId, recorded);
   take.bytes = state.lastSavedBytes || 0;
   if (gaps && gaps.length) take.gaps = gaps.map(g => ({ at: g.at, seconds: g.seconds }));
   take.provenance = provenance ? Object.assign(provenanceNow(recorded), provenance) : provenanceNow(recorded);
+  if (item) take.provenance.practiceItem = state.practiceItem;
   if (state.pendingMarkers.length && !provenance) take.markers = state.pendingMarkers.map(at => ({ at }));
   // クリック（1 サンプルの飛び）を探して印を残す。落ちた穴とは別の、機材トラブルの前触れ
   try {
@@ -959,25 +965,27 @@ export function bextFor(description, prov, channels, rate, format, timeReference
 /** 人が読む証明書。 */
 export function provenanceText() {
   const s = state.session;
-  const lines = [`${s.name} — 録音証明`, `Tonmeister ${new Date().toLocaleString('ja-JP')}`, '', 'この録音は、次の経路で録られました。素の WAV には録音後いっさい手を加えていません。', ''];
+  const en = currentLang() === 'en';
+  const lines = [`${s.name} — ${T('録音証明')}`, `Tonmeister ${new Date().toLocaleString(en ? 'en-US' : 'ja-JP')}`, '', T('この録音は、次の経路で録られました。素の WAV には録音後いっさい手を加えていません。'), ''];
   for (const t of s.tracks) {
     for (const k of t.takes) {
       const p = k.provenance;
-      lines.push(`■ ${t.name} / ${k.name}　${k.seconds.toFixed(1)} 秒・${(k.sampleRate / 1000).toFixed(1)} kHz・${k.channels}ch${t.startSeconds ? `・開始 ${t.startSeconds.toFixed(3)} 秒` : ''}`);
-      if (!p) { lines.push('  （証拠なし：以前の版で録ったテイク）'); continue; }
-      lines.push(`  録った時刻：${p.at}`);
-      lines.push(`  入り口：${p.device}`);
-      lines.push(`  道：${p.path === 'raw' ? '生フレーム取得（AudioContext を通らない。再標本化なし）' : 'AudioContext 経由' + (p.resampled ? '（⚠ 再標本化あり）' : '')}　${p.captureRate} Hz`);
-      lines.push(`  ブラウザの加工：${p.processing === 'off' ? 'すべて切' : p.processing === 'unknown' ? '不明（ブラウザが答えない）' : '⚠ 残っている'}`);
-      lines.push(`  届いたビット数：${p.bits === 16 ? '⚠ 16bit' : p.bits === 24 ? '24bit' : p.bits === 32 ? 'float（整数の刻みに乗っていない）' : '未確定'}`);
-      if (p.verify) lines.push(`  経路の検証：${p.verify === 'identical' ? '2つの道で 1 サンプルも違わず一致' : p.verify}`);
-      if (p.floorDb != null) lines.push(`  暗騒音：${p.floorDb.toFixed(1)} dBFS`);
-      lines.push(`  落ちた音：${p.gaps} 回${p.lostFrames ? `（${p.lostFrames} フレームを無音で埋めて長さを保った）` : ''}`);
-      if (p.prerollSeconds > 0.05) lines.push(`  押す前の音：${p.prerollSeconds.toFixed(1)} 秒を先頭に含む`);
-      if (p.driftPpm != null) lines.push(`  クロックのずれ：${p.driftPpm >= 0 ? '+' : ''}${p.driftPpm} ppm`);
-      if (k.gaps && k.gaps.length) lines.push(`  穴の位置：${k.gaps.map(g => g.at.toFixed(2) + 's').join(', ')}`);
-      if (k.clicks && k.clicks.length) lines.push(`  クリック：${k.clicks.length} か所（${k.clicks.slice(0, 8).map(c => c.at.toFixed(2) + 's').join(', ')}${k.clicks.length > 8 ? '…' : ''}）`);
-      lines.push(`  受け皿：${p.storage === 'opfs' ? 'OPFS へ同期追記' : 'IndexedDB'}${p.mirror ? '＋フォルダ直書き' : ''}`);
+      lines.push(`■ ${t.name} / ${k.name}　` + T('{sec} 秒・{khz} kHz・{ch}ch', { sec: k.seconds.toFixed(1), khz: (k.sampleRate / 1000).toFixed(1), ch: k.channels }) + (t.startSeconds ? T('・開始 {sec} 秒', { sec: t.startSeconds.toFixed(3) }) : ''));
+      if (!p) { lines.push('  ' + T('（証拠なし：以前の版で録ったテイク）')); continue; }
+      lines.push('  ' + T('録った時刻：') + p.at);
+      lines.push('  ' + T('入り口：') + (p.side ? T('keyboard のアプリ音バス（別トラック）') : p.device));
+      lines.push('  ' + T('道：') + (p.path === 'raw' ? T('生フレーム取得（AudioContext を通らない。再標本化なし）') : T('AudioContext 経由') + (p.resampled ? T('（⚠ 再標本化あり）') : '')) + `　${p.captureRate} Hz`);
+      if (p.side) lines.push('  ' + T('置いた位置：本線の先頭から {sec} 秒（押す前の音＋奏者が聞くまでの遅れ）', { sec: (p.sideOffsetSeconds || 0).toFixed(3) }));
+      lines.push('  ' + T('ブラウザの加工：') + (p.processing === 'off' ? T('すべて切') : p.processing === 'unknown' ? T('不明（ブラウザが答えない）') : T('⚠ 残っている')));
+      lines.push('  ' + T('届いたビット数：') + (p.bits === 16 ? '⚠ 16bit' : p.bits === 24 ? '24bit' : p.bits === 32 ? T('float（整数の刻みに乗っていない）') : T('未確定')));
+      if (p.verify) lines.push('  ' + T('経路の検証：') + (p.verify === 'identical' ? T('2つの道で 1 サンプルも違わず一致') : p.verify));
+      if (p.floorDb != null) lines.push('  ' + T('暗騒音：') + `${p.floorDb.toFixed(1)} dBFS`);
+      lines.push('  ' + T('落ちた音：{n} 回', { n: p.gaps }) + (p.lostFrames ? T('（{n} フレームを無音で埋めて長さを保った）', { n: p.lostFrames }) : ''));
+      if (p.prerollSeconds > 0.05) lines.push('  ' + T('押す前の音：{sec} 秒を先頭に含む', { sec: p.prerollSeconds.toFixed(1) }));
+      if (p.driftPpm != null) lines.push('  ' + T('クロックのずれ：') + `${p.driftPpm >= 0 ? '+' : ''}${p.driftPpm} ppm`);
+      if (k.gaps && k.gaps.length) lines.push('  ' + T('穴の位置：') + k.gaps.map(g => g.at.toFixed(2) + 's').join(', '));
+      if (k.clicks && k.clicks.length) lines.push('  ' + T('クリック：{n} か所', { n: k.clicks.length }) + `（${k.clicks.slice(0, 8).map(c => c.at.toFixed(2) + 's').join(', ')}${k.clicks.length > 8 ? '…' : ''}）`);
+      lines.push('  ' + T('受け皿：') + (p.storage === 'opfs' ? T('OPFS へ同期追記') : 'IndexedDB') + (p.mirror ? T('＋フォルダ直書き') : ''));
       lines.push('');
     }
   }

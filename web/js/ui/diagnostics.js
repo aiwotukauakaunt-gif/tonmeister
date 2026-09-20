@@ -3,6 +3,7 @@
   app.js から動きを変えずに分けたもの。共有の状態は context.js。
 */
 
+import { P, alpha } from '../palette.js';
 import { Engine, delay } from '../engine.js';
 import * as store from '../store.js';
 import * as M from '../model.js';
@@ -123,12 +124,12 @@ export function drawSpectrum(bands) {
   for (let i = 0; i < bands.length; i++) {
     const db = Math.max(-120, Math.min(0, bands[i].db));
     const y = (1 - (db + 120) / 120) * h;
-    ctx.fillStyle = bands[i].centerHz >= 45 && bands[i].centerHz <= 65 ? '#B06A2C' : '#C9A227';
+    ctx.fillStyle = bands[i].centerHz >= 45 && bands[i].centerHz <= 65 ? P.copper() : P.good();
     ctx.globalAlpha = 0.85;
     ctx.fillRect(i * bw + 1, y, Math.max(1, bw - 2), h - y);
   }
   ctx.globalAlpha = 1;
-  ctx.strokeStyle = 'rgba(90,78,51,.6)';
+  ctx.strokeStyle = alpha(P.waveLine(), .6);
   ctx.beginPath(); ctx.moveTo(0, h - .5); ctx.lineTo(w, h - .5); ctx.stroke();
 }
 
@@ -359,15 +360,15 @@ export function drawResponse(resp) {
   if (!resp || !resp.length) return;
   const x = (hz) => (Math.log10(hz) - Math.log10(20)) / (Math.log10(20000) - Math.log10(20)) * w;
   const y = (db) => h / 2 - Math.max(-12, Math.min(12, db)) / 12 * (h / 2 - 4);
-  ctx.strokeStyle = 'rgba(90,78,51,.6)';
+  ctx.strokeStyle = alpha(P.waveLine(), .6);
   for (const d of [-6, 0, 6]) { ctx.beginPath(); ctx.moveTo(0, y(d) + .5); ctx.lineTo(w, y(d) + .5); ctx.stroke(); }
   for (const f of [100, 1000, 10000]) { ctx.beginPath(); ctx.moveTo(x(f) + .5, 0); ctx.lineTo(x(f) + .5, h); ctx.stroke(); }
-  ctx.strokeStyle = '#C9A227'; ctx.lineWidth = 1.5;
+  ctx.strokeStyle = P.good(); ctx.lineWidth = 1.5;
   ctx.beginPath();
   let first = true;
   for (const o of resp) { if (o.db < -100) continue; const px = x(o.hz), py = y(o.db); if (first) { ctx.moveTo(px, py); first = false; } else ctx.lineTo(px, py); }
   ctx.stroke();
-  ctx.fillStyle = '#9E937A'; ctx.font = '10px Consolas, monospace';
+  ctx.fillStyle = P.faint(); ctx.font = '10px Consolas, monospace';
   ctx.fillText('+6', 2, y(6) - 2); ctx.fillText('0', 2, y(0) - 2); ctx.fillText('-6', 2, y(-6) - 2);
 }
 
@@ -387,7 +388,7 @@ export function renderRoom(room, dec) {
   const { ctx, w, h } = Wave.fitCanvas(cv);
   const rate = dec.rate, from = dec.peakIndex, n = Math.min(dec.ir.length - from, Math.round(rate * 0.05));
   const peak = Math.abs(dec.ir[from]) || 1e-9;
-  ctx.strokeStyle = '#C9A227'; ctx.lineWidth = 1;
+  ctx.strokeStyle = P.good(); ctx.lineWidth = 1;
   ctx.beginPath();
   for (let px = 0; px < w; px++) {
     const i0 = from + Math.floor(px / w * n), i1 = from + Math.floor((px + 1) / w * n);
@@ -398,7 +399,7 @@ export function renderRoom(room, dec) {
     ctx.moveTo(px + .5, h); ctx.lineTo(px + .5, y);
   }
   ctx.stroke();
-  ctx.fillStyle = '#A03A2E';
+  ctx.fillStyle = P.rec();
   for (const r of room.reflections) { const px = r.ms / 50 * w; ctx.fillRect(px - 1, 0, 2, 6); }
 }
 
@@ -471,7 +472,7 @@ export function renderCompare() {
   // 分布を重ねる
   const cv = $('#compare-canvas');
   const { ctx, w, h } = Wave.fitCanvas(cv);
-  const colors = ['#C9A227', '#4E7CB5', '#B06A2C'];
+  const colors = [P.good(), P.blue(), P.copper()];
   slots.forEach((c, si) => {
     if (!c) return;
     ctx.strokeStyle = colors[si]; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.9;

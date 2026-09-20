@@ -75,30 +75,32 @@ export function finishSidecar() {
   const s = state.session;
   const f = s.finish;
   const m = f.measured;
+  const en = currentLang() === 'en';
   const lines = [
-    `${s.name} — 仕上げの覚え書き`,
-    `Tonmeister ${new Date().toLocaleString('ja-JP')}`,
+    `${s.name} — ${T('仕上げの覚え書き')}`,
+    `Tonmeister ${new Date().toLocaleString(en ? 'en-US' : 'ja-JP')}`,
     '',
-    '素（_素.wav）には何も足していません。この仕上げは、素に次のものを通した音です。',
+    T('素（_素.wav）には何も足していません。この仕上げは、素に次のものを通した音です。'),
     '',
   ];
-  if (f.rumbleCut) lines.push('・風音カット：30 Hz 以下をハイパス（Q 0.707）');
+  if (f.rumbleCut) lines.push(T('・風音カット：30 Hz 以下をハイパス（Q 0.707）'));
   for (const t of s.tracks) {
     const p = t.processing;
-    if (p.humEnabled) lines.push(`・${t.name}：電源ハム除去 ${p.humFrequency} Hz とその倍音 ×${p.humHarmonics}（ノッチ Q 30）`);
-    if (p.gateEnabled) lines.push(`・${t.name}：ノイズゲート しきい値 ${p.gateThresholdDb} dBFS`);
-    if (f.reverb.enabled && p.reverbSend != null && p.reverbSend !== 1) lines.push(`・${t.name}：響きの量 ${Math.round(p.reverbSend * 100)}%`);
+    if (p.humEnabled) lines.push(`・${t.name}：` + T('電源ハム除去 {hz} Hz とその倍音 ×{n}（ノッチ Q 30）', { hz: p.humFrequency, n: p.humHarmonics }));
+    if (p.gateEnabled) lines.push(`・${t.name}：` + T('ノイズゲート しきい値 {db} dBFS', { db: p.gateThresholdDb }));
+    if (f.reverb.enabled && p.reverbSend != null && p.reverbSend !== 1) lines.push(`・${t.name}：` + T('響きの量 {pct}%', { pct: Math.round(p.reverbSend * 100) }));
   }
   if (f.reverb.enabled && f.reverb.amount > 0) {
-    lines.push(`・ホールの響き：${hallName(f.reverb.hall)}（鏡像法の初期反射＋3帯域の後部残響）／響きの長さ ${(+f.reverb.seconds).toFixed(1)} 秒／量 ${Math.round(f.reverb.amount * 100)}%／直接音から響きまで ${Math.round(f.reverb.preDelayMs)} ms`);
-    lines.push('  直接音には触っていません。響きだけを足しています。');
+    lines.push(T('・ホールの響き：{hall}（鏡像法の初期反射＋3帯域の後部残響）／響きの長さ {sec} 秒／量 {pct}%／直接音から響きまで {ms} ms',
+      { hall: T(hallName(f.reverb.hall)), sec: (+f.reverb.seconds).toFixed(1), pct: Math.round(f.reverb.amount * 100), ms: Math.round(f.reverb.preDelayMs) }));
+    lines.push('  ' + T('直接音には触っていません。響きだけを足しています。'));
   }
-  if (f.normalizeEnabled) lines.push(`・音量そろえ：いちばん大きいところ（True Peak）を ${f.normalizeTargetDb} dBTP に${m && isFinite(m.normalizeGainDb) ? `（${m.normalizeGainDb >= 0 ? '+' : ''}${m.normalizeGainDb.toFixed(1)} dB）` : ''}`);
+  if (f.normalizeEnabled) lines.push(T('・音量そろえ：いちばん大きいところ（True Peak）を {db} dBTP に', { db: f.normalizeTargetDb }) + (m && isFinite(m.normalizeGainDb) ? `（${m.normalizeGainDb >= 0 ? '+' : ''}${m.normalizeGainDb.toFixed(1)} dB）` : ''));
   lines.push('');
   if (m) {
-    lines.push(`盛り度：${m.grade}`);
+    lines.push(T('盛り度：') + T(m.grade));
     lines.push(`  ${Finish.describeMeasure(m)}`);
-    lines.push('  （音の変化＝音量を合わせたあとに残る差。−30 dB より下なら耳ではほぼ分からない）');
+    lines.push('  ' + T('（音の変化＝音量を合わせたあとに残る差。−30 dB より下なら耳ではほぼ分からない）'));
   }
   return lines.join('\n');
 }
@@ -163,12 +165,12 @@ export async function doExport() {
   const ext = flac ? 'flac' : 'wav';
   if (flac) busy('FLAC に圧縮しています…');
   try {
-    files.push([`${name}_素.${ext}`, make(a, `${name} 素（加工ゼロのミックス）`)]);
-    files.push([`${name}_録音証明.txt`, new Blob([provenanceText()], { type: 'text/plain;charset=utf-8' })]);
+    files.push([`${name}${T('_素')}.${ext}`, make(a, `${name} ${T('素（加工ゼロのミックス）')}`)]);
+    files.push([`${name}${T('_録音証明')}.txt`, new Blob([provenanceText()], { type: 'text/plain;charset=utf-8' })]);
     if ($('#chk-exp-finished').checked && state.exportFinished) {
       const f = state.exportFinished;
-      files.push([`${name}_仕上げ.${ext}`, make(f, `${name} 仕上げ（${Finish.summarize(state.session).join('・')}）`)]);
-      files.push([`${name}_仕上げ.txt`, new Blob([finishSidecar()], { type: 'text/plain;charset=utf-8' })]);
+      files.push([`${name}${T('_仕上げ')}.${ext}`, make(f, `${name} ${T('仕上げ')}（${Finish.summarize(state.session).join('・')}）`)]);
+      files.push([`${name}${T('_仕上げ')}.txt`, new Blob([finishSidecar()], { type: 'text/plain;charset=utf-8' })]);
     }
   } finally { if (flac) unbusy(); }
   for (const [fn, blob] of files) { downloadBlob(blob, fn); await delay(250); }
@@ -236,7 +238,7 @@ export async function exportSessionFolder() {
   const meta = sessionMeta();
 
   const files = [['session.json', new Blob([JSON.stringify(meta, null, 2)], { type: 'application/json' })],
-    ['録音証明.txt', new Blob([provenanceText()], { type: 'text/plain;charset=utf-8' })]];
+    [T('録音証明') + '.txt', new Blob([provenanceText()], { type: 'text/plain;charset=utf-8' })]];
   for (let ti = 0; ti < s.tracks.length; ti++) {
     const t = s.tracks[ti];
     for (let ki = 0; ki < t.takes.length; ki++) {

@@ -3,6 +3,7 @@
   app.js から動きを変えずに分けたもの。共有の状態は context.js。
 */
 
+import { P, alpha } from '../palette.js';
 import { Engine, delay } from '../engine.js';
 import * as store from '../store.js';
 import * as M from '../model.js';
@@ -232,7 +233,7 @@ export function rebuildLanes() {
 
 export function redrawLanes() { for (const lane of state.lanes) lane.redraw(); }
 
-export const WAVE_COLORS = ['#C9A227', '#4E7CB5', '#B3A98F', '#B06A2C']; // 金／ベルリン藍／象牙／赤銅
+export const waveColors = () => [P.good(), P.blue(), P.waveDim(), P.copper()];   // 金／藍／象牙／赤銅（keyboard の中では差し替わる）
 
 /**
  * 「重ねる」モードの1トラック分のレーン。
@@ -241,7 +242,7 @@ export const WAVE_COLORS = ['#C9A227', '#4E7CB5', '#B3A98F', '#B06A2C']; // 金�
 export function createLane(track, colorIndex) {
   const el = $('#tpl-lane').content.firstElementChild.cloneNode(true);
   const canvas = $('.lane-wave', el);
-  const color = WAVE_COLORS[colorIndex % WAVE_COLORS.length];
+  const palette = waveColors(); const color = palette[colorIndex % palette.length];
 
   const lane = {
     el, track, canvas, color,
@@ -596,7 +597,7 @@ export function drawRuler() {
   for (const s of steps) { if (s / total * usable >= 70) { step = s; break; } }
 
   ctx.font = '10.5px Consolas, monospace';
-  ctx.fillStyle = '#9E937A';
+  ctx.fillStyle = P.faint();
   ctx.textBaseline = 'top';
   for (let t = 0; t <= total; t += step) {
     const x = left + t / total * usable;

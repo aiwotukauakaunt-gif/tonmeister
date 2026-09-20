@@ -1,0 +1,110 @@
+/*
+  Tonmeister — keyboard の中で開かれたときの配色。
+
+  theme.css の変数を、keyboard（style.css）の配色に差し替える。ライト／ダークは親に追従する
+  （host.js が親の <html data-theme> をこちらへ写す。無ければ OS の設定）。
+  金・黒漆・銅の三色は、keyboard の 青（primary）・地・橙（accent）に置き換わる。
+  形（部品の寸法・配置）は theme.css のまま。色と書体だけがここで変わる。
+*/
+
+:root {
+  --bg:#f3f5f9; --panel:#ffffff; --sunken:#eaeef5; --deep:#dde3ec; --lane:#f7f9fc;
+  --btn-face:#ffffff; --btn-hover:#eaeef5; --mini-face:#f3f5f9;
+  --line:#d3d9e3; --wave-line:#b6bfcc; --strong-line:#2b6fd6;
+  --fg:#171b22; --fg-dim:#4d5665; --fg-faint:#7a8494; --ink:#ffffff;
+  --rec:#d93a3a; --rec-bright:#e85555; --good:#2b6fd6; --brass-deep:#1f56b0; --warn:#e0a13a; --mute-on:#b02a2a; --sel:#2b6fd6;
+  --prussian:#7a4dd8; --prussian-light:#7a4dd8;
+  --recbar-bg:#fde2e2; --recbar-line:#d93a3a; --recbar-fg:#7a1f1f; --recbar-sub:#a04545; --recbar-dim:#b07070;
+  --warn-card-line:#e0a13a; --warn-card-fg:#6b4a10;
+
+  --hover:#eaeef5; --hover-2:#eaeef5; --row-on:#dfeaff; --lane-on:#eef3fb;
+  --paper:#ffffff; --paper-2:#f3f5f9; --plate-bg:#ffffff; --selection:#dfeaff;
+  --btn-top:rgba(255,255,255,.6); --accent-hover:#1f56b0; --ink-on-good:#ffffff;
+  --rec-glow:#e85555; --rec-glow-2:#b02a2a; --stop-a:#4d5665; --stop-b:#171b22;
+  --well:#dde3ec;
+  --good-tint:rgba(43,111,214,.18); --good-tint-2:rgba(43,111,214,.10); --good-edge:rgba(43,111,214,.45); --good-band:rgba(43,111,214,.55);
+  --warn-tint:rgba(224,161,58,.14); --warn-edge:rgba(224,161,58,.5);
+  --shadow:0 6px 24px -12px rgba(20,30,50,.25); --shadow-soft:0 3px 14px -6px rgba(20,30,50,.3); --shadow-pop:0 6px 24px -12px rgba(20,30,50,.35); --shadow-panel:0 6px 24px -12px rgba(20,30,50,.25);
+  --backdrop:rgba(23,27,34,.45); --busy-bg:rgba(243,245,249,.7); --tap-bg:rgba(243,245,249,.85);
+  --tip-bg:#171b22; --tip-fg:#eaeef6; --tip-line:#2f3846;
+  --peak-danger:rgba(217,58,58,.22);
+  --copper:#ff8a1a; --copper-deep:#e06e05; --copper-light:#a85200; --copper-pale:#ffe6cc; --copper-paper:#ffffff; --copper-dark:#ffe6cc;
+  --cmp-a:#2b6fd6; --cmp-b:#7a4dd8; --cmp-c:#ff8a1a; --wave-dim:#7a8494;
+  --level-from:#6ea8fe; --ring-track:#d3d9e3;
+
+  --ui:"Helvetica Neue",Arial,"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP","Yu Gothic UI",Meiryo,system-ui,sans-serif;
+  --plate:var(--ui);
+  --mono:"Helvetica Neue",Arial,system-ui,sans-serif;
+
+  --double-rule:linear-gradient(to bottom,var(--line) 0 1px,transparent 1px 4px);
+  --stage-bg:var(--bg); --stage-rec-bg:#fbf1f1;
+  --plate-fill:var(--panel); --button-fill:var(--btn-face); --button-fill-hover:var(--btn-hover);
+  --level-fill:linear-gradient(to right,#6ea8fe,#2b6fd6);
+}
+
+/* ダーク：OS 設定に追従（親がライトを明示していないとき）／親がダークを明示したとき */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:#0f1218; --panel:#1a1f29; --sunken:#232a36; --deep:#0b0e14; --lane:#151a23;
+    --btn-face:#232a36; --btn-hover:#2d3542; --mini-face:#1f2530;
+    --line:#2f3846; --wave-line:#465162; --strong-line:#6ea8fe;
+    --fg:#eaeef6; --fg-dim:#b6bfcd; --fg-faint:#8a94a5; --ink:#0b1220;
+    --rec:#d93a3a; --rec-bright:#ff6b6b; --good:#6ea8fe; --brass-deep:#4d86e6; --warn:#ff9a3a; --mute-on:#8a2a2a; --sel:#6ea8fe;
+    --prussian:#a688ff; --prussian-light:#a688ff;
+    --recbar-bg:#2a1616; --recbar-line:#ff6b6b; --recbar-fg:#ffb3b3; --recbar-sub:#d99a9a; --recbar-dim:#a07777;
+    --warn-card-line:#ff9a3a; --warn-card-fg:#ffd9a8;
+
+    --hover:#232a36; --hover-2:#232a36; --row-on:#1f3050; --lane-on:#1c2333;
+    --paper:#eaeef6; --paper-2:#ffffff; --plate-bg:#1a1f29; --selection:#1f3050;
+    --btn-top:rgba(255,255,255,.08); --accent-hover:#4d86e6; --ink-on-good:#0b1220;
+    --rec-glow:#ff6b6b; --rec-glow-2:#a02a2a; --stop-a:#465162; --stop-b:#1a1f29;
+    --well:#0b0e14;
+    --good-tint:rgba(110,168,254,.22); --good-tint-2:rgba(110,168,254,.12); --good-edge:rgba(110,168,254,.5); --good-band:rgba(110,168,254,.6);
+    --warn-tint:rgba(255,154,58,.14); --warn-edge:rgba(255,154,58,.5);
+    --shadow:0 10px 30px -14px rgba(0,0,0,.7); --shadow-soft:0 3px 14px -6px rgba(0,0,0,.6); --shadow-pop:0 10px 30px -14px rgba(0,0,0,.8); --shadow-panel:0 10px 30px -14px rgba(0,0,0,.7);
+    --backdrop:rgba(0,0,0,.6); --busy-bg:rgba(15,18,24,.7); --tap-bg:rgba(15,18,24,.85);
+    --tip-bg:#eaeef6; --tip-fg:#171b22; --tip-line:#b6bfcd;
+    --peak-danger:rgba(255,107,107,.25);
+    --copper:#ff9a3a; --copper-deep:#a85200; --copper-light:#ffb066; --copper-pale:#ffe6cc; --copper-paper:#0b1220; --copper-dark:#4a3010;
+    --cmp-a:#6ea8fe; --cmp-b:#a688ff; --cmp-c:#ff9a3a; --wave-dim:#8a94a5;
+    --level-from:#4d86e6; --ring-track:#2f3846;
+    --stage-rec-bg:#191014;
+    --level-fill:linear-gradient(to right,#4d86e6,#6ea8fe);
+  }
+}
+:root[data-theme="dark"] {
+  --bg:#0f1218; --panel:#1a1f29; --sunken:#232a36; --deep:#0b0e14; --lane:#151a23;
+  --btn-face:#232a36; --btn-hover:#2d3542; --mini-face:#1f2530;
+  --line:#2f3846; --wave-line:#465162; --strong-line:#6ea8fe;
+  --fg:#eaeef6; --fg-dim:#b6bfcd; --fg-faint:#8a94a5; --ink:#0b1220;
+  --rec:#d93a3a; --rec-bright:#ff6b6b; --good:#6ea8fe; --brass-deep:#4d86e6; --warn:#ff9a3a; --mute-on:#8a2a2a; --sel:#6ea8fe;
+  --prussian:#a688ff; --prussian-light:#a688ff;
+  --recbar-bg:#2a1616; --recbar-line:#ff6b6b; --recbar-fg:#ffb3b3; --recbar-sub:#d99a9a; --recbar-dim:#a07777;
+  --warn-card-line:#ff9a3a; --warn-card-fg:#ffd9a8;
+
+  --hover:#232a36; --hover-2:#232a36; --row-on:#1f3050; --lane-on:#1c2333;
+  --paper:#eaeef6; --paper-2:#ffffff; --plate-bg:#1a1f29; --selection:#1f3050;
+  --btn-top:rgba(255,255,255,.08); --accent-hover:#4d86e6; --ink-on-good:#0b1220;
+  --rec-glow:#ff6b6b; --rec-glow-2:#a02a2a; --stop-a:#465162; --stop-b:#1a1f29;
+  --well:#0b0e14;
+  --good-tint:rgba(110,168,254,.22); --good-tint-2:rgba(110,168,254,.12); --good-edge:rgba(110,168,254,.5); --good-band:rgba(110,168,254,.6);
+  --warn-tint:rgba(255,154,58,.14); --warn-edge:rgba(255,154,58,.5);
+  --shadow:0 10px 30px -14px rgba(0,0,0,.7); --shadow-soft:0 3px 14px -6px rgba(0,0,0,.6); --shadow-pop:0 10px 30px -14px rgba(0,0,0,.8); --shadow-panel:0 10px 30px -14px rgba(0,0,0,.7);
+  --backdrop:rgba(0,0,0,.6); --busy-bg:rgba(15,18,24,.7); --tap-bg:rgba(15,18,24,.85);
+  --tip-bg:#eaeef6; --tip-fg:#171b22; --tip-line:#b6bfcd;
+  --peak-danger:rgba(255,107,107,.25);
+  --copper:#ff9a3a; --copper-deep:#a85200; --copper-light:#ffb066; --copper-pale:#ffe6cc; --copper-paper:#0b1220; --copper-dark:#4a3010;
+  --cmp-a:#6ea8fe; --cmp-b:#a688ff; --cmp-c:#ff9a3a; --wave-dim:#8a94a5;
+  --level-from:#4d86e6; --ring-track:#2f3846;
+  --stage-rec-bg:#191014;
+  --level-fill:linear-gradient(to right,#4d86e6,#6ea8fe);
+}
+
+/* keyboard の丸み・影の言葉に寄せる（形は変えず、角と輪郭だけ） */
+html.hosted-keyboard .btn, html.hosted-keyboard .chip, html.hosted-keyboard .mini,
+html.hosted-keyboard .dial, html.hosted-keyboard .lst, html.hosted-keyboard .card, html.hosted-keyboard dialog.dlg,
+html.hosted-keyboard .plate-inner, html.hosted-keyboard .device-row, html.hosted-keyboard .session-row { border-radius:9px }
+html.hosted-keyboard .topbar { border-bottom:1px solid var(--line); border-image:none }
+html.hosted-keyboard .rivet, html.hosted-keyboard .closer, html.hosted-keyboard #guilloche { display:none }
+html.hosted-keyboard .plate-title { letter-spacing:.06em }
+html.hosted-keyboard .btn::before { display:none }
