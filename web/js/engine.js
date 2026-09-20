@@ -17,6 +17,7 @@
 */
 
 import * as store from './store.js';
+import { SideRecorder } from './side.js';
 import * as Finish from './finish.js';
 
 const CLICK_FREQUENCY = 1000;
@@ -74,6 +75,8 @@ export class Engine {
     this.lostFrames = 0;            // 入り口を開いてから落ちたフレームの合計
     this.gapCount = 0;
     this.mirror = null;             // フォルダ直書き（disk-writer.js）。無ければ null
+    this.side = null;               // 脇の録り（keyboard のアプリ音など。side.js）。無ければ null
+    this._sideStream = null;
 
     this._tapChunks = null;
     this._tapWant = 0;
@@ -224,6 +227,7 @@ export class Engine {
 
     this._startClock();
     this.lostFrames = 0; this.gapCount = 0;
+    if (this._sideStream) { try { this.attachSide(this._sideStream); } catch (e) { console.warn('脇の録りを繋げません:', e); } }
     this.setPreroll(this.prerollSeconds);
     this.setRecordChannels(this._recMap);
     return this.status();
@@ -235,6 +239,36 @@ export class Engine {
     if (!this.isOpen) return;
     try { this._sendCapture({ cmd: 'preroll', frames: Math.round(this.prerollSeconds * this.recordRate) }); } catch { }
   }
+
+  /**
+   * 脇の録り：別の MediaStream（keyboard のアプリ音バスなど）を、本線と同じ合図で並行して録る。
+   * 入り口を開き直しても覚えていて、繋ぎ直す。null で外す。
+   */
+  attachSide(stream) {
+    this._sideStream = stream || null;
+    if (this.side) {
+      this.side.close();
+      if (this.side.mode === 'worker' && this.captureWorker) { try { this.captureWorker.postMessage({ cmd: 'side-stop' }); } catch { } }
+      this.side = null;
+    }
+    if (!stream || !this.ctx) return;
+    // 生フレーム取得のときは、マイクと同じ Worker で受けて timestamp で揃える。そうでなければ同じ AudioContext の worklet で
+    const track = stream.getAudioTracks()[0];
+    if (this.rawPath && this.captureWorker && track && typeof MediaStreamTrackProcessor === 'function') {
+      try {
+        const processor = new MediaStreamTrackProcessor({ track });
+        this.captureWorker.postMessage({ cmd: 'side', readable: processor.readable }, [processor.readable]);
+        this.side = new SideRecorder(this.ctx, stream, 'worker');
+      } catch (e) {
+        console.warn('脇の録りを Worker で受けられません。worklet に切り替えます:', e);
+        this.side = new SideRecorder(this.ctx, stream, 'worklet');
+      }
+    } else {
+      this.side = new SideRecorder(this.ctx, stream, 'worklet');
+    }
+    this.side.onError = (msg) => { if (this.onError) this.onError(msg); };
+  }
+  get hasSide() { return !!this.side; }
 
   /** 録るチャンネル（入力の番号の配列）。null なら全部。 */
   setRecordChannels(map) {
@@ -350,6 +384,7 @@ export class Engine {
   }
 
   close() {
+    if (this.side) { try { this.side.close(); } catch { } this.side = null; }
     this.stopPlayback();
     if (this.isRecording) { try { this._sendCapture({ cmd: 'record', on: false }); } catch { } }
     this.isRecording = false;
@@ -469,6 +504,8 @@ export class Engine {
       if (this.onError) this.onError('生フレーム取得が止まりました: ' + m.message);
       return;
     }
+    if (m.type === 'side-data') { if (this.side) this.side.onData(m); return; }
+    if (m.type === 'side-error') { if (this.onError) this.onError('脇の録りが止まりました: ' + m.message); return; }
     if (m.type === 'tap') {
       if (!this._tapChunks) return;
       this._tapChunks.push(m.frames);
@@ -550,7 +587,7 @@ export class Engine {
    * @param trimFrames 録音の頭から捨てるフレーム数。重ね録りでは「出力遅延＋入力遅延」の
    *                   ぶんだけ演奏が後ろにズレて記録されるため、ここで削って既存トラックと揃える。
    */
-  startRecording(trimFrames = 0, { toMemory = false, preroll = true } = {}) {
+  startRecording(trimFrames = 0, { toMemory = false, preroll = true, latencyFrames = 0 } = {}) {
     if (!this.isOpen) throw new Error('先に音の入り口を開いてください。');
     if (this.isRecording) return null;
 
@@ -562,6 +599,7 @@ export class Engine {
     this._recFrames = 0;
     this._recToMemory = toMemory;
     this._recTrim = Math.max(0, trimFrames | 0);
+    this._recTrimLatency = Math.max(0, latencyFrames | 0);   // trim のうち、往復の遅れが占めるぶん
     this._recPrerolled = 0;
     this._recGaps = [];
     this._recParts = [];
@@ -573,7 +611,13 @@ export class Engine {
     this._sendCapture({
       cmd: 'record', on: true, trimFrames: this._recTrim,
       preroll: usePreroll, prerollFrames: Math.round(this.prerollSeconds * this.recordRate),
+      side: !!(this.side && !toMemory),   // 脇の録りも同じ合図で（Worker が同じ時刻で切る）
     });
+
+    // 脇の録りも同じ瞬間に。重ね録りの trim（往復の遅れ＋助走）のうち、脇に当てるのは助走ぶんだけ
+    // （脇の音は往復していない。奏者が聞くまでの遅れは、テイクを置く位置で扱う：record.js の addSideTake）
+    if (this.side && !toMemory) this.side.start(Math.max(0, this._recTrim - (this._recTrimLatency | 0)));
+    this._recSideTrimmed = this._recTrim > 0;
 
     if (!toMemory) this._openSink();
     return this._recId;
@@ -650,6 +694,7 @@ export class Engine {
     // 残りを全部渡してもらってから閉じる
     const done = new Promise(resolve => { this._recResolve = resolve; });
     this._sendCapture({ cmd: 'record', on: false });
+    const sideDone = this.side && this.side.recording ? this.side.stop().catch(() => null) : null;
     await Promise.race([done, delay(1500)]);
     this._recResolve = null;
 
@@ -685,6 +730,7 @@ export class Engine {
     const result = { samples, frames, channels, sampleRate, seconds: frames / sampleRate,
       prerollSeconds: this._recPrerolled / sampleRate, gaps, lostFrames: gaps.reduce((a, g) => a + g.frames, 0) };
     if (parts.length) { parts.push({ ...result, gaps: [], prerollSeconds: 0 }); result.parts = parts; }
+    if (sideDone) { const side = await sideDone; if (side) { side.trimmed = !!this._recSideTrimmed; result.side = side; } }
     if (this.mirror && this.mirror.finish) { try { result.mirrorFiles = await this.mirror.finish(result); } catch (e) { if (this.onError) this.onError('フォルダへの書き出しに失敗: ' + e.message); } }
     return result;
   }

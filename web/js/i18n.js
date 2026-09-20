@@ -159,6 +159,11 @@ export const EN = {
   '長くなったので次の受け皿に切り替えました（{n} 本目）。音は1つも落としていません。止めると続きのトラックとして並びます。': 'Rolled over to a new file ({n}). No samples lost; the continuation appears as a following track when you stop.',
   'ズレ合わせを自動で測りました：往復 {ms} ms。': 'Latency measured automatically: round trip {ms} ms.',
   '置き場所の空きが少なく、あと約 {min} 分しか録れません。古い録音を「録音一覧」で消すか、丸ごと書き出して外へ移してください。': 'Storage is nearly full — about {min} minutes left. Delete old recordings or export them.',
+  // keyboard の中で
+  'keyboard の音も録る': "Also record keyboard's sound", 'keyboard の音': 'keyboard',
+  'メトロノーム・伴奏ループ・鍵盤の音を、別のトラックに。マイクの録りには混ぜません': 'Metronome, looper and keys go to a separate track — never mixed into the mic take',
+  'keyboard の音（メトロノーム・伴奏・鍵盤）は別トラック「{name}」に入れました。マイクの録りには混ぜていません。要らなければ消音か外すで。': "keyboard's sound (metronome, looper, keys) went to a separate track “{name}”. It is not mixed into the mic take — mute or remove it if you do not need it.",
+  'keyboard の音は 1 GB で打ち止めにしました（本線はそのまま録れています）。': "keyboard's side track stopped at 1 GB (the main take kept going).",
   // 一般
   '録音・再生を止めてから読み込んでください。': 'Stop recording or playback before importing.', 'まだ書き出すものがありません。': 'Nothing to export yet.',
   '録音・再生を止めてから書き出してください。': 'Stop recording or playback before exporting.', 'ファイルがありません。': 'No files.',

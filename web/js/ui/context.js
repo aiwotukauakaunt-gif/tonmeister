@@ -61,6 +61,7 @@ export const state = {
     driftCompensate: true,        // クロックのずれを、重ね録りのとき再生側で相殺する
     driftMemory: {},              // 機器の組ごとの最後のずれ（ppm）。開いてすぐの重ね録りで使う
     micCal: null,                 // マイクの較正ファイル { name, points }
+    hostCapture: true,            // keyboard の中で開いたとき、アプリ音を別トラックに録る
     processing: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
     lastSessionId: null,
   },

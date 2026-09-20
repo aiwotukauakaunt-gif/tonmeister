@@ -153,8 +153,8 @@ export async function openRecordingSink(recId, channels, sampleRate) {
     await callStorage('begin', { recId, channels, sampleRate });
     return {
       kind: 'opfs',
-      append: (samples) => callStorage('append', { samples, channels }, [samples.buffer]),
-      end: () => callStorage('end'),
+      append: (samples) => callStorage('append', { recId, samples, channels }, [samples.buffer]),
+      end: () => callStorage('end', { recId }),
     };
   }
   let seq = 0;

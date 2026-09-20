@@ -752,3 +752,11 @@ dialog.tall{height:88vh}
 .verdict{font-size:14.5px}
 .inspector .sub{font-size:13px}
 .pill{flex-wrap:wrap;row-gap:4px}
+
+
+/* ============ keyboard の中で開かれたとき ============
+   外側の額（見出し・タブ）は keyboard が持つので、こちらは中身に集中する。 */
+.host-row{margin:6px 0 2px}
+.host-row .check-row{padding:4px 0}
+html.hosted body{overflow:hidden}
+html.hosted #btn-lang{display:none}

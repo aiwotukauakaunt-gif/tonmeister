@@ -11,7 +11,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const ROOT = __dirname;
+const ROOT = process.env.ROOT ? require("path").resolve(process.env.ROOT) : __dirname;   // ROOT で別のフォルダも配れる（keyboard の動作確認用）
 // ポートは PORT 環境変数 → 引数 → 既定 の順で決める（外から割り当てられることがある）
 const PORT = Number(process.env.PORT) || Number(process.argv[2]) || 8787;
 

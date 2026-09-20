@@ -22,6 +22,7 @@ import * as Sweep from './sweep.js';
 import * as MicCal from './miccal.js';
 import * as Importer from './importer.js';
 import { T, setLang, applyStatic, currentLang } from './i18n.js';
+import { host, detectHost, hostLang, watchHostLang } from './host.js';
 import { encodeFlac } from './flac.js';
 import { $, $$, ask, audioCache, autoSave, busy, engine, hideNotice, loadLatestOrNewSession, recoverOrphans, saveSession, saveTakeAudio, setSession, setText, show, showError, showNotice, state, unbusy } from './ui/context.js';
 import { analyzeTrack, checkProcessing, compareRecord, measureSilence, measureSweep, measureTone, openCompare, openDiagnostics, openMeasure, renderCompare, updateMeasureUi, verifyPath } from './ui/diagnostics.js';
@@ -34,6 +35,14 @@ import { chooseMirrorFolder, clearMirrorFolder, needsGesture, openSettings, plat
 /* ================= 起動 ================= */
 
 export async function init() {
+  // keyboard の中で開かれたか。そうなら言語は親に合わせ、自分の言語ボタンと Service Worker は引っ込める
+  if (detectHost()) {
+    const l = hostLang();
+    if (l) setLang(l);
+    watchHostLang((l2) => { setLang(l2); toggleLangTo(l2); });
+    show($('#btn-lang'), false);
+    show($('#row-host'), true);
+  }
   applyStatic(document);
   document.documentElement.lang = currentLang();
   updateLangButton();
@@ -41,6 +50,7 @@ export async function init() {
   wireEvents();
 
   state.settings = Object.assign(state.settings, await store.getSettings());
+  $('#chk-host-capture').checked = state.settings.hostCapture !== false;
   await loadLatestOrNewSession();
 
   setMode(state.session.tracks.length === 0 ? 'record' : 'overdub');
@@ -61,7 +71,7 @@ export async function init() {
   }
   // 開けたが AudioContext が止まったまま（自動再生の制限）なら、最初のタップで起こす
   if (engine.ctx && engine.ctx.state === 'suspended') showTapStart();
-  registerServiceWorker();
+  if (!host.active) registerServiceWorker();
   platformNotes();
 
   await recoverOrphans();
@@ -82,6 +92,16 @@ export async function init() {
 
 
 
+
+/** 親から言語が来たとき：辞書を当て直し、動きながら出ている文も引き直す。 */
+function toggleLangTo(l) {
+  if (currentLang() !== l) setLang(l);
+  // toggleLang の中身（表示の引き直し）だけを借りる：一度反転して戻すのは避け、同じ更新関数を呼ぶ
+  updateLangButton();
+  updateInputStatus();
+  updateSessionUi();
+  updateFinishUi();
+}
 
 /* ================= 配線 ================= */
 
@@ -122,6 +142,11 @@ export function wireEvents() {
   $('#pill-grade').onclick = () => { const g = $('#path-grade'); show(g, g.hidden); };
   $('#btn-export').onclick = openExport;
   $('#btn-export-2').onclick = openExport;
+  $('#chk-host-capture').onchange = async (e) => {
+    state.settings.hostCapture = !!e.target.checked;
+    await store.setSettings(state.settings);
+    if (!e.target.checked) { try { engine.attachSide(null); } catch { } }
+  };
   $('#btn-settings').onclick = () => { show($('#list-popup'), false); openSettings(); };
   $('#btn-lang').onclick = () => { show($('#list-popup'), false); toggleLang(); };
   $('#btn-change-input').onclick = openSettings;

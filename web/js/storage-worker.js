@@ -15,10 +15,8 @@
 */
 
 let dir = null;           // tonmeister/rec
-let handle = null;        // 同期アクセスハンドル（録音中のみ）
-let recId = null;
-let size = 0;
-let written = 0;          // フレーム数
+// 開いている受け皿。本線と脇の録り（keyboard のアプリ音）を同時に持てるよう、recId ごとに分ける
+const open = new Map();   // recId → { handle, size, written }
 
 const reply = (id, result, error) => self.postMessage({ id, result, error });
 
@@ -38,29 +36,28 @@ async function begin(id, channels, sampleRate) {
   mw.truncate(0); mw.write(text, { at: 0 }); mw.flush(); mw.close();
 
   const fh = await d.getFileHandle(id + '.f32', { create: true });
-  handle = await fh.createSyncAccessHandle();
+  const handle = await fh.createSyncAccessHandle();
   handle.truncate(0);
-  size = 0;
-  written = 0;
-  recId = id;
+  open.set(id, { handle, size: 0, written: 0 });
 }
 
-function append(samples, channels) {
-  if (!handle) throw new Error('録音の受け皿が開いていません。');
+function append(id, samples, channels) {
+  const o = open.get(id);
+  if (!o) throw new Error('録音の受け皿が開いていません。');
   const bytes = new Uint8Array(samples.buffer, samples.byteOffset, samples.byteLength);
-  const n = handle.write(bytes, { at: size });
+  const n = o.handle.write(bytes, { at: o.size });
   if (n !== bytes.byteLength) throw new Error('書き込みが途中で止まりました。');
-  size += n;
-  written += samples.length / channels;
-  return written;
+  o.size += n;
+  o.written += samples.length / channels;
+  return o.written;
 }
 
-function end() {
-  if (handle) { try { handle.flush(); } catch { } try { handle.close(); } catch { } }
-  handle = null;
-  const r = { recId, frames: written, bytes: size };
-  recId = null;
-  return r;
+function end(id) {
+  const o = open.get(id);
+  if (!o) return { recId: id, frames: 0, bytes: 0 };
+  try { o.handle.flush(); } catch { } try { o.handle.close(); } catch { }
+  open.delete(id);
+  return { recId: id, frames: o.written, bytes: o.size };
 }
 
 async function read(id) {
@@ -78,7 +75,7 @@ async function list() {
   for await (const [name, h] of d.entries()) {
     if (!name.endsWith('.json') || h.kind !== 'file') continue;
     const id = name.slice(0, -5);
-    if (id === recId) continue;   // いま録っている最中のものは孤児ではない
+    if (open.has(id)) continue;   // いま録っている最中のものは孤児ではない
     try {
       const meta = JSON.parse(await (await h.getFile()).text());
       const f = await (await d.getFileHandle(id + '.f32')).getFile();
@@ -112,8 +109,8 @@ self.onmessage = async (e) => {
     switch (m.cmd) {
       case 'probe': reply(m.id, await probe()); break;
       case 'begin': await begin(m.recId, m.channels, m.sampleRate); reply(m.id, true); break;
-      case 'append': reply(m.id, append(m.samples, m.channels)); break;
-      case 'end': reply(m.id, end()); break;
+      case 'append': reply(m.id, append(m.recId, m.samples, m.channels)); break;
+      case 'end': reply(m.id, end(m.recId)); break;
       case 'read': { const r = await read(m.recId); self.postMessage({ id: m.id, result: r }, [r.samples.buffer]); break; }
       case 'list': reply(m.id, await list()); break;
       case 'remove': await remove(m.recId); reply(m.id, true); break;

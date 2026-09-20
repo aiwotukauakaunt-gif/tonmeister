@@ -19,6 +19,7 @@ import * as Sweep from '../sweep.js';
 import * as MicCal from '../miccal.js';
 import * as Importer from '../importer.js';
 import { T, setLang, applyStatic, currentLang } from '../i18n.js';
+import { host, hostStream, hostRate, hostRecordingStarted } from '../host.js';
 import { encodeFlac } from '../flac.js';
 import { $, $$, LIVE_CAPACITY, ask, audioCache, busy, engine, hideNotice, loadTake, saveSession, saveTakeAudio, setText, show, showError, showNotice, state, unbusy } from './context.js';
 import { openDiagnostics } from './diagnostics.js';
@@ -43,6 +44,8 @@ export async function openInput() {
   if (s.outputDeviceId) await engine.setOutputDevice(s.outputDeviceId);
   s.deviceId = engine.deviceId || s.deviceId;
   await store.setSettings(s);
+  // keyboard の中なら、開いたその場でアプリ音のバスを脇の録りとして繋いでおく（録音の瞬間に繋ぐと最初の札を待たされる）
+  if (host.active && s.hostCapture !== false) { try { engine.attachSide(hostStream()); } catch (e) { console.warn(e); } }
   updateInputStatus();
   return status;
 }
@@ -525,14 +528,21 @@ export async function startRecording(forceTarget) {
   const lead = playing ? Math.max(0, engine.playStartAt - engine.ctx.currentTime) : 0;
   const trim = playing ? state.settings.latencyFrames + Math.round(lead * rate) : 0;
 
+  // keyboard の中なら、アプリ音のバスを脇の録りとして繋ぐ（設定で切れる）
+  if (host.active) {
+    const want = state.settings.hostCapture !== false ? hostStream() : null;
+    if (want !== engine._sideStream) { try { engine.attachSide(want); } catch (e) { console.warn(e); } }
+  }
+
   try {
-    engine.startRecording(trim);
+    engine.startRecording(trim, { latencyFrames: playing ? state.settings.latencyFrames : 0 });
   } catch (e) {
     engine.stopPlayback();
     showError(e.message);
     return;
   }
   acquireWakeLock();
+  hostRecordingStarted();
 
   setText($('#txt-rec-target'),
     target ? `「${target.name}」に録り足しています`
@@ -636,6 +646,7 @@ export async function addRecordedTakes(recorded, target) {
     offset += a.seconds;
   }
   state.pendingMarkers = [];
+  if (recorded.side && recorded.side.seconds > 0.01) await addSideTake(recorded);
   if (recorded.prerollSeconds > 0.05) {
     showNotice(T('押す前の {sec} 秒も含めて残しました。', { sec: recorded.prerollSeconds.toFixed(1) }), false);
   }
@@ -647,7 +658,7 @@ export async function addRecordedTakes(recorded, target) {
   }
 }
 
-export async function addRecordedTake(recorded, target, suffix = '', { startSeconds = 0, trackName: forcedName = null, gaps = null, quiet = false } = {}) {
+export async function addRecordedTake(recorded, target, suffix = '', { startSeconds = 0, trackName: forcedName = null, gaps = null, quiet = false, provenance = null } = {}) {
   if (!recorded || recorded.seconds <= 0.01) return null;  // 中身が無いテイクは残さない
 
   const save = state.settings.saveFormat;
@@ -656,8 +667,8 @@ export async function addRecordedTake(recorded, target, suffix = '', { startSeco
   const take = M.newTake(name, audioId, recorded);
   take.bytes = state.lastSavedBytes || 0;
   if (gaps && gaps.length) take.gaps = gaps.map(g => ({ at: g.at, seconds: g.seconds }));
-  take.provenance = provenanceNow(recorded);
-  if (state.pendingMarkers.length) take.markers = state.pendingMarkers.map(at => ({ at }));
+  take.provenance = provenance ? Object.assign(provenanceNow(recorded), provenance) : provenanceNow(recorded);
+  if (state.pendingMarkers.length && !provenance) take.markers = state.pendingMarkers.map(at => ({ at }));
   // クリック（1 サンプルの飛び）を探して印を残す。落ちた穴とは別の、機材トラブルの前触れ
   try {
     const clicks = Analysis.findClicks(recorded.samples, recorded.frames, recorded.channels, recorded.sampleRate);
@@ -692,6 +703,36 @@ export async function addRecordedTake(recorded, target, suffix = '', { startSeco
   // タブは勝手に切り替えない。バッジだけ光らせて次の行き先を示す。
   if (wasEmpty) { const b = $('#tab-badge'); b.classList.remove('pulse'); void b.offsetWidth; b.classList.add('pulse'); }
   return track;
+}
+
+/**
+ * 脇の録り（keyboard のアプリ音）を、別のトラックとして並べる。
+ * 置く位置：本線の頭には「押す前の音」が付いているので、そのぶん後ろへ。さらに、鳴った音が
+ * 奏者の耳とマイクに届くまでの遅れ（ズレ合わせで測った往復）ぶん後ろへ置くと、奏者が聞いて
+ * 合わせたクリックの位置と、演奏の位置が揃う。測っていなければブラウザが申告する出力の遅れで代える。
+ */
+export async function addSideTake(recorded) {
+  const side = recorded.side;
+  const rate = recorded.sampleRate;
+  let latency = 0;
+  if (side.trimmed) latency = 0;   // 重ね録り：本線の頭を往復ぶん捨ててあるので、脇はそのままの位置で揃う
+  else if (state.settings.latencyMeasured && state.settings.latencyFrames > 0) latency = state.settings.latencyFrames / rate;
+  else if (engine.ctx) latency = (engine.ctx.outputLatency || 0) + (engine.ctx.baseLatency || 0);
+  const startSeconds = (recorded.prerollSeconds || 0) + latency;
+  // 脇の録りは本線と同じ AudioContext で受けているので、レートは必ず揃っている。
+  // 親（keyboard）の AudioContext が別のレートなら、ブラウザが橋渡しで再標本化している（証明に残す）。
+  const name = T('keyboard の音');
+  const track = await addRecordedTake(side, null, '', {
+    startSeconds, trackName: name, quiet: true,
+    provenance: { device: 'keyboard (app bus)', path: 'audiocontext', processing: 'off', resampled: hostRate() > 0 && hostRate() !== rate, sideOffsetSeconds: startSeconds, side: true },
+  });
+  if (!track) return;
+  track.side = 'keyboard';
+  await saveSession(state.session);
+  updateSessionUi();
+  rebuildLanes();
+  if (side.capped) showNotice(T('keyboard の音は 1 GB で打ち止めにしました（本線はそのまま録れています）。'), true);
+  else showNotice(T('keyboard の音（メトロノーム・伴奏・鍵盤）は別トラック「{name}」に入れました。マイクの録りには混ぜていません。要らなければ消音か外すで。', { name }), false);
 }
 
 /**

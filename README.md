@@ -447,6 +447,7 @@ desktop/InstRecorder/
 - **Web 版** … 出来た。`web/` にある（[web/README.md](web/README.md)）。デスクトップ版と同じものに加えて、
   生フレーム取得・True Peak・素／仕上げ・スイープ測定・BWF・FLAC・持ち込み・PWA まで。ASIO / WASAPI 排他だけは仕組み上ない
 - **スマホ版** … Web 版が PWA として動く。<https://aiwotukauakaunt-gif.github.io/tonmeister/> をホーム画面に置く
+- **keyboard への統合** … 出来た。keyboard の「🎚️ 本格録音」として同居し、鍵盤・メトロノーム・伴奏ループの音を別トラックに標本単位で揃えて録る（[web/README.md](web/README.md) の「keyboard の中で」）
 - **デスクトップ版への逆輸入の続き** … 盛り度・スイープ測定・経路の格
 
 ## 既知の制約

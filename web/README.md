@@ -211,6 +211,14 @@ node web/serve.js
 - 24bit の値を1つも変えない。自己検証はブラウザの復号器で読み戻して **不一致 0**（同じレートの OfflineAudioContext なので再標本化は入らない）
 - 書き出しダイアログの3枚目「FLAC で残す（24bit 可逆）」。容量はおよそ 0.65〜0.75
 
+**keyboard の中で（本格録音）**
+- 練習ツール keyboard（<https://aiwotukauakaunt-gif.github.io/keyboard/>）の「🎚️ 本格録音」として、同一オリジンの iframe（`record/index.html?host=keyboard`）で開く。`js/host.js` が親の `window.KB` と話す。単体で開いたときは何もしない
+- **keyboard の音も録る** — 鍵盤・メトロノーム・伴奏ループ・ドローン（親のアプリ音バス）を、マイクの録りと同じ合図で**別のトラック**「keyboard の音」に録る（`js/side.js`）。マイクの経路には触らない。モノラル・1 GB で打ち止め
+- 揃え方：生フレーム取得のときは、マイクと同じ Worker で受け、`AudioData.timestamp`（同じ時計）でマイクの開始・停止と同じ時刻に切る。2 つの経路（Worker と AudioContext）の遅れの違いに左右されず、**標本の単位で揃う**（合成音の検証で差 0）。AudioContext 経由のときは同じ AudioContext の worklet で受ける
+- 置く位置：本線の「押す前の音」ぶん後ろへ。1本目はさらにズレ合わせで測った往復の遅れぶん後ろへ（奏者が聞いて合わせたクリックの位置に演奏が揃う）。重ね録りは本線の頭を往復ぶん捨ててあるので、そのまま
+- 言語は親に追従（`<html lang>` を見る）。録音を始めると親の練習記録の計測が始まる。自分の Service Worker は登録しない（親のが `record/` も持つ）
+- 写し方：`python web/tools/sync_keyboard.py` が `web/` → `Keyboard/record/` を同期し、keyboard の `sw.js` の資源一覧と CACHE 名（中身のハッシュ）を書き換える。開発の本拠はこちら
+
 **キーボード操作** — デスクトップ版と同じ（Space / R / Esc / Ctrl+S / Ctrl+M / Ctrl+N）に加えて
 
 | キー | 動作 |
@@ -297,6 +305,8 @@ web/
     ui/export.js      書き出し（素／仕上げ・BWF・FLAC・録音証明・セッション丸ごと）
     ui/sessions.js    録音一覧・持ち込み・元に戻す
     engine.js         入力の開閉・録音・再生（素／仕上げの2経路）・モニター・ズレ合わせ・ドリフト（RecorderEngine）
+    side.js           脇の録り（keyboard のアプリ音を別トラックに）
+    host.js           親アプリ（keyboard）との橋渡し
     finish.js         仕上げの一式：段階ダイヤル・2経路の配線・盛り度の測定
     quality.js        経路の格（開いた瞬間の判定）と試し弾きの助言
     importer.js       持ち込み（session.json ＋ WAV、1本の WAV）
