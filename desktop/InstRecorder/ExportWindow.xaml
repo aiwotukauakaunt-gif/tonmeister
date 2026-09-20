@@ -1,0 +1,93 @@
+<Window x:Class="InstRecorder.ExportWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="書き出す" Width="470" SizeToContent="Height" ResizeMode="NoResize"
+        Background="{StaticResource Bg}" Foreground="{StaticResource Fg}" FontFamily="Yu Gothic UI, Segoe UI" FontSize="14"
+        TextOptions.TextFormattingMode="Display"
+        WindowStartupLocation="CenterOwner">
+
+    <StackPanel>
+        <!-- ヘッダ -->
+        <Border Background="{StaticResource Sunken}" Padding="16,12"
+                BorderBrush="{StaticResource DoubleRule}" BorderThickness="0,0,0,4">
+            <StackPanel>
+                <TextBlock Text="1つの音にまとめて書き出す" FontWeight="Bold" FontSize="13"/>
+                <TextBlock x:Name="TxtSummary" Style="{StaticResource Sub}" Margin="0,4,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <StackPanel Margin="16">
+            <!-- そのままの音で残す -->
+            <Border x:Name="CardWav" CornerRadius="2" Padding="13" Cursor="Hand"
+                    Background="{StaticResource Panel}" BorderThickness="1"
+                    BorderBrush="{StaticResource StrongLine}"
+                    MouseLeftButtonUp="CardWav_Click">
+                <Grid>
+                    <StackPanel Margin="0,0,60,0">
+                        <TextBlock Text="そのままの音で残す" FontWeight="SemiBold" FontSize="12.5"/>
+                        <TextBlock Text="いちばん劣化しない形。あとで編集するならこれ。"
+                                   Style="{StaticResource Sub}" Margin="0,5,0,0"/>
+                        <TextBlock x:Name="TxtWavMeta" FontFamily="Consolas" FontSize="10.5"
+                                   Margin="0,7,0,0" Foreground="{StaticResource FgFaint}"/>
+                    </StackPanel>
+                    <Border CornerRadius="2" Padding="7,2" Background="{StaticResource Info}"
+                            HorizontalAlignment="Right" VerticalAlignment="Top">
+                        <TextBlock Text="おすすめ" FontWeight="Bold" FontSize="10.5"
+                                   Foreground="{StaticResource Ink}"/>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- 容量を小さくして残す -->
+            <Border x:Name="CardFlac" CornerRadius="2" Padding="13" Margin="0,10,0,0" Cursor="Hand"
+                    Background="{StaticResource Panel}" BorderThickness="1"
+                    BorderBrush="{StaticResource Line}"
+                    MouseLeftButtonUp="CardFlac_Click">
+                <StackPanel>
+                    <TextBlock Text="容量を小さくして残す" FontWeight="SemiBold" FontSize="12.5"/>
+                    <TextBlock Text="音は一切変わりません。ファイルが約3割小さくなります。"
+                               Style="{StaticResource Sub}" Margin="0,5,0,0"/>
+                    <TextBlock x:Name="TxtFlacMeta" FontFamily="Consolas" FontSize="10.5"
+                               Margin="0,7,0,0" Foreground="{StaticResource FgFaint}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- クリップ予告 -->
+            <Border CornerRadius="6" Padding="13,11" Margin="0,14,0,0"
+                    Background="{StaticResource Sunken}"
+                    BorderBrush="{StaticResource Line}" BorderThickness="1">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse x:Name="ClipDot" Width="7" Height="7" Fill="{StaticResource FgDim}"/>
+                        <TextBlock x:Name="TxtClip" Margin="9,0,0,0" FontSize="11.5"
+                                   Text="いちばん大きいところを調べています…" TextWrapping="Wrap"/>
+                    </StackPanel>
+
+                    <Border Height="10" CornerRadius="5" Margin="0,10,0,0"
+                            Background="{StaticResource Deep}" BorderBrush="{StaticResource Line}"
+                            BorderThickness="1" ClipToBounds="True">
+                        <Grid x:Name="PeakHost">
+                            <Rectangle x:Name="PeakDanger" HorizontalAlignment="Right"
+                                       Fill="#557E2A22"/>
+                            <Rectangle x:Name="PeakFill" HorizontalAlignment="Left" Width="0"
+                                       Fill="{StaticResource LevelFill}"/>
+                        </Grid>
+                    </Border>
+
+                    <TextBlock x:Name="TxtPeak" FontFamily="Consolas" FontSize="11" Margin="0,7,0,0"/>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+
+        <!-- フッタ -->
+        <Border Background="{StaticResource Sunken}" Padding="16,12"
+                BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="やめる" Style="{StaticResource TopBarButton}" Height="32"
+                        Foreground="{StaticResource FgDim}" IsCancel="True" Click="BtnCancel_Click"/>
+                <Button x:Name="BtnExport" Content="書き出す" Style="{StaticResource AccentButton}"
+                        Height="32" Margin="10,0,0,0" IsDefault="True" Click="BtnExport_Click"/>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</Window>

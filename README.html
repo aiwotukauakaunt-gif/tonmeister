@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tonmeister — 楽器のための録音機</title>
+<style>
+  :root{
+    --gold:#C9A227; --gold-lt:#E3C766; --gold-dk:#8A6E1E;
+    --crimson:#7E2A22; --crimson-lt:#A03A2E;
+    --ivory:#EDE6D6; --ivory-2:#B3A98F; --ivory-3:#847A64;
+    --lacquer:#0C0B09; --panel:#15130F; --rule:#332D20;
+    --copper:#B06A2C;
+    --berlin:#22406B; --berlin-lt:#4E7CB5;
+    --serif:"Palatino Linotype","Book Antiqua","游明朝","Yu Mincho","YuMincho","Hiragino Mincho ProN",serif;
+    --mono:"Courier New",Courier,monospace;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--lacquer); color:var(--ivory);
+    font-family:var(--serif); font-size:16.5px; line-height:1.85;
+    letter-spacing:.01em;
+  }
+  .sheet{max-width:860px;margin:0 auto;padding:0 28px 96px}
+
+  /* ── 銘板 ─────────────────────────────── */
+  .plate{
+    margin:56px 0 0; padding:38px 24px 30px; position:relative;
+    background:var(--panel);
+    border:1px solid var(--gold-dk);
+    outline:1px solid var(--rule); outline-offset:4px;
+    text-align:center;
+  }
+  .plate::before,.plate::after{
+    content:""; position:absolute; left:9px; right:9px; height:0;
+  }
+  .rivet{position:absolute;width:7px;height:7px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,var(--gold-lt),var(--gold-dk) 70%,#5a4712);}
+  .rivet.tl{top:9px;left:9px} .rivet.tr{top:9px;right:9px}
+  .rivet.bl{bottom:9px;left:9px} .rivet.br{bottom:9px;right:9px}
+  .title{
+    font-size:clamp(19px,4.4vw,32px); letter-spacing:.44em; text-indent:.44em;
+    color:var(--gold); font-weight:400; margin:0;
+  }
+  .plate hr{border:0;height:1px;background:var(--gold-dk);
+    width:62%;margin:18px auto 14px;opacity:.9}
+  .sub{font-size:15px;letter-spacing:.9em;text-indent:.9em;color:var(--ivory-2);margin:0}
+  .tagline{margin:26px 0 0;color:var(--ivory-2);font-size:14.5px;line-height:1.9}
+
+  /* ── 二重罫 ───────────────────────────── */
+  .doublerule{height:4px;margin:34px 0 44px;
+    background:linear-gradient(to bottom,var(--gold) 0 2px,var(--lacquer) 2px 3px,var(--gold-dk) 3px 4px);}
+
+  /* ── 目次 ─────────────────────────────── */
+  nav.toc{border:1px solid var(--rule);background:var(--panel);padding:20px 26px;margin:0 0 46px}
+  nav.toc b{display:block;color:var(--gold);font-size:13px;letter-spacing:.28em;
+    text-transform:uppercase;font-weight:400;margin-bottom:12px}
+  nav.toc ol{margin:0;padding:0;list-style:none;
+    columns:2;column-gap:32px;font-size:14.5px;line-height:2}
+  nav.toc a{color:var(--ivory-2);text-decoration:none;border-bottom:1px solid transparent}
+  nav.toc a:hover{color:var(--gold-lt);border-bottom-color:var(--gold-dk)}
+  @media(max-width:620px){nav.toc ol{columns:1}}
+
+  /* ── 見出し ───────────────────────────── */
+  h2{
+    font-size:22px;font-weight:400;color:var(--gold);margin:64px 0 0;
+    padding-bottom:10px;border-bottom:1px solid var(--gold-dk);letter-spacing:.06em;
+  }
+  h2+p,h2+.lead{margin-top:22px}
+  h3{font-size:17.5px;font-weight:400;color:var(--ivory);margin:42px 0 4px;letter-spacing:.05em}
+  h3::after{content:"";display:block;width:38px;height:1px;background:var(--gold-dk);margin-top:8px}
+  h4{font-size:15px;font-weight:400;color:var(--gold-lt);letter-spacing:.16em;margin:34px 0 6px}
+
+  p{margin:14px 0}
+  strong{color:var(--gold-lt);font-weight:400}
+  em{font-style:normal;color:var(--ivory-2)}
+  a{color:var(--gold);text-decoration:none;border-bottom:1px solid var(--gold-dk)}
+
+  ul,ol{padding-left:1.35em;margin:14px 0}
+  li{margin:7px 0}
+  ul{list-style:none;padding-left:1.1em}
+  ul>li{position:relative}
+  ul>li::before{content:"—";position:absolute;left:-1.1em;color:var(--gold-dk)}
+  ol>li::marker{color:var(--gold-dk);font-family:var(--mono);font-size:.9em}
+
+  code{font-family:var(--mono);font-size:.88em;color:var(--gold-lt);
+    background:#1b1813;border:1px solid var(--rule);padding:1px 5px;border-radius:2px}
+  pre{background:var(--panel);border:1px solid var(--rule);border-left:2px solid var(--gold-dk);
+    padding:16px 18px;overflow-x:auto;margin:18px 0;border-radius:2px}
+  pre code{background:none;border:0;padding:0;color:var(--ivory-2);font-size:13px;line-height:1.7}
+
+  /* ── 表 ───────────────────────────────── */
+  .tw{overflow-x:auto;margin:20px 0}
+  table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:400px}
+  th,td{border-bottom:1px solid var(--rule);padding:10px 14px;text-align:left;vertical-align:top;line-height:1.7}
+  thead th{color:var(--gold);font-weight:400;letter-spacing:.14em;font-size:12.5px;
+    text-transform:uppercase;border-bottom:1px solid var(--gold-dk);white-space:nowrap}
+  tbody tr:last-child td{border-bottom:1px solid var(--gold-dk)}
+  td:first-child{color:var(--ivory)}
+  td.k{font-family:var(--mono);color:var(--gold-lt);white-space:nowrap}
+  td.num{font-family:var(--mono);color:var(--ivory-2);white-space:nowrap}
+
+  /* ── 色見本 ───────────────────────────── */
+  .sw{display:inline-block;width:13px;height:13px;margin-right:7px;
+    vertical-align:-2px;border:1px solid #000;box-shadow:0 0 0 1px var(--rule)}
+
+  /* ── 注記 ─────────────────────────────── */
+  .note{border-left:2px solid var(--gold-dk);background:var(--panel);
+    padding:14px 20px;margin:24px 0;font-size:15px;color:var(--ivory-2)}
+  .note.warn{border-left-color:var(--copper)}
+  .note strong{color:var(--gold-lt)}
+
+  /* ── 花形の締め ───────────────────────── */
+  .fleuron{text-align:center;margin:74px 0 0;color:var(--gold-dk);
+    font-size:13px;letter-spacing:.5em}
+  .fleuron::before{content:"";display:block;width:120px;height:1px;
+    background:var(--gold-dk);margin:0 auto 18px}
+  footer{text-align:center;color:var(--ivory-3);font-size:12.5px;
+    letter-spacing:.2em;margin-top:22px}
+
+  @media print{
+    body{background:#fff;color:#111}
+    .plate,nav.toc,pre,.note,table{background:#fff}
+    h2,.title{color:#6b5410}
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+<header class="plate">
+  <span class="rivet tl"></span><span class="rivet tr"></span>
+  <span class="rivet bl"></span><span class="rivet br"></span>
+  <h1 class="title">TONMEISTER</h1>
+  <hr>
+  <p class="sub">録 音</p>
+  <p class="tagline">
+    <strong>トーンマイスター</strong>。ドイツ語で「録音技師」。<br>
+    「実際に鳴っている音にできるだけ寄せる」ことを最優先にした録音アプリ。<br>
+    Windows デスクトップ版 → Web 版 → スマホ版 の順に作る。ここは <strong>Windows デスクトップ版</strong>。
+  </p>
+</header>
+
+<div class="doublerule"></div>
+
+<p>画面上の題字は、ドイツの扉ページにならって疎組の <code>T O N M E I S T E R</code> と、
+細い金の罫をはさんだ和文の副題 <code>録　音</code> の二段。</p>
+
+<nav class="toc">
+  <b>目次</b>
+  <ol>
+    <li><a href="#start">起動</a></li>
+    <li><a href="#features">できること</a></li>
+    <li><a href="#design">音質のための設計方針</a></li>
+    <li><a href="#screen">画面の構成</a></li>
+    <li><a href="#usage">使い方</a></li>
+    <li><a href="#devmode">開発用モード</a></li>
+    <li><a href="#tree">構成</a></li>
+    <li><a href="#roadmap">この先の予定</a></li>
+    <li><a href="#limits">既知の制約</a></li>
+  </ol>
+</nav>
+
+<!-- ══ 起動 ══ -->
+<h2 id="start">起動</h2>
+<p>デスクトップの <strong>「Tonmeister」ショートカット</strong> をダブルクリック。
+実体は <code>app\Tonmeister.exe</code>（単体ファイル・.NET 7 ランタイム必要）。</p>
+<p>録音の保存先は従来どおり <code>%USERPROFILE%\Music\録音\</code> のまま。
+名前を変えても、これまでに録った音はそのまま開ける。</p>
+<p>開発中のビルドを動かす場合:</p>
+<pre><code>cd desktop/InstRecorder &amp;&amp; dotnet run</code></pre>
+
+<!-- ══ できること ══ -->
+<h2 id="features">できること</h2>
+
+<h4>録音</h4>
+<ul>
+  <li>ASIO / WASAPI 排他 / WASAPI 共有 を選べる</li>
+  <li>デバイスが<strong>実際に受け付けるフォーマットだけ</strong>を列挙（〜192 kHz / 24bit・32bit float）</li>
+  <li>32bit float WAV または 24bit PCM WAV で保存</li>
+  <li>入力レベルメーター（1.5 秒ピークホールド、クリップ検出）。「ちょうどいい」帯（−12〜−6 dBFS）を常時表示し、外れたら何をすればよいかを一言で出す</li>
+  <li>「いま何につながっているか」を状態ピルに1行で表示（共有モードに落ちていれば「詳しい設定」で分かる）</li>
+  <li><strong>長時間録音</strong>：4GB を超えると自動で次のファイルに切り替える。切り替えはバッファの境目で行うのでサンプルは1つも落ちない。再生時は繋げて1本として扱う</li>
+</ul>
+
+<h4>多重録音（オーバーダブ）</h4>
+<ul>
+  <li>既存トラックをヘッドホンで聴きながら重ね録り</li>
+  <li><strong>テイク管理</strong>：同じトラックに何本でも録り、後から選び直せる。録り直し中は前のテイクが再生から自動的に外れる</li>
+  <li>トラックごとの音量・ミュート・ソロ・リネーム</li>
+  <li><strong>レイテンシ補正</strong>（UI 上は「ズレ合わせ」。自動測定）</li>
+  <li>書き出し（用途で選ぶ2枚のカード。書き出す前にピークを調べて「音が割れるか」を先に見せる）</li>
+  <li><strong>再生中は出力のレベルを表示</strong>。「音は出ています（−12.3）」と出るので、聞こえないときにアプリ側の問題か、機器の音量の問題かを切り分けられる</li>
+  <li><strong>録り終わりに一言</strong>。止めた直後に「小さすぎます（−35.8 dBFS）」などを画面上部に出す。メーターは録っている最中しか見ないので、気づかないまま小さい録りを重ねないため</li>
+  <li><strong>録音一覧</strong> — 名前・トラック数・長さ・日時で並べて選ぶ</li>
+  <li><strong>取り消し</strong> — 外したトラックは、報せの帯の「元に戻す」で1つだけ戻せる</li>
+  <li>セッション＝フォルダ1つ。<code>session.json</code> と WAV だけなので、フォルダごとコピーすれば持ち運べる</li>
+</ul>
+
+<h4>ダイレクトモニタリング</h4>
+<ul>
+  <li>自分の音をヘッドホンに返す（音量調整つき）</li>
+  <li>録音される信号とは完全に別経路。モニターで何をしても記録内容は変わらない</li>
+  <li>遅延が育たないよう、溜まりすぎたバッファは古い方を捨てる</li>
+</ul>
+
+<h4>波形編集（レーンでのドラッグ、または「波形を見て直す」）</h4>
+<ul>
+  <li>波形を見ながらドラッグで範囲選択、時間軸と縦方向のズーム</li>
+  <li><strong>選択範囲の切り出し</strong> — 長時間録音から良いところだけを取り出す</li>
+  <li><strong>部分録り直し（パンチイン）</strong> — 選択位置から助走2秒つきで録り直し、前後を 5ms のクロスフェードでつなぐ</li>
+  <li>どちらも<strong>元の WAV には触らず</strong>、新しいテイクとして追加される</li>
+  <li>波形の縦倍率「自動」で、暗騒音しかない録音でも波形が見える</li>
+</ul>
+
+<h4>後処理（非破壊）</h4>
+<ul>
+  <li><strong>電源ハム除去</strong> — 50/60Hz とその倍音だけを細く削る。検証では <strong>32.7 dB 減衰、1kHz の楽音への影響 0.0 dB</strong></li>
+  <li><strong>ノイズゲート</strong> — 無音部だけ静かにする。検証では <strong>無音部 42.5 dB 減衰、演奏部 0.0 dB 変化</strong></li>
+  <li>設定は再生と書き出しのときだけ通る。切れば即座に元の音に戻る</li>
+</ul>
+
+<h4>ホールの響き（非破壊）</h4>
+<ul>
+  <li>録音まるごとに<strong>鳴らす場所</strong>を1つ選ぶ。小さな部屋 / 室内楽ホール / 大ホール / 石の教会</li>
+  <li>実在のホールを録った<strong>インパルス応答（IR）の WAV</strong> も読み込める</li>
+  <li>内蔵ホールは寸法から作る。前半の反射は<strong>鏡像法</strong>（壁を鏡に見立てて音源を映す）で、
+      どの壁からいつ返るかを距離そのままに置く。後半は3帯域に分けた雑音で、高い音ほど早く減らす。
+      壁の吸音率は「響きの長さ」からザビーンの式で逆算するので、つまみを動かすと反射の強さも一緒に変わる</li>
+  <li><strong>直接音には触らない。</strong> 元の信号はそのまま出し、響きだけを足す。
+      「響きの量 0%」は元の音と<strong>1サンプルも違わない</strong></li>
+  <li>つまみは3つ。響きの長さ（0.2〜6.0秒）・響きの量（0〜100%）・直接音から響きまでの間（25〜150ms）</li>
+  <li>書き出しは響きの尾のぶん自動で長くなる（途中で切らない）</li>
+</ul>
+
+<h4>書き出し</h4>
+<ul>
+  <li>ミックスダウン（32bit float / 24bit WAV）</li>
+  <li><strong>FLAC</strong>（24bit 可逆圧縮）— 検証で <strong>不一致サンプル 0 個</strong>、容量は WAV の約 69%</li>
+</ul>
+
+<h4>壊れにくさ</h4>
+<ul>
+  <li>録音中は約2秒ごとにディスクへ書き出す</li>
+  <li>起動時に壊れた WAV ヘッダを自動修復（前回異常終了しても録れた音は残る）</li>
+  <li>未処理の例外は <code>Music\録音\errors.log</code> に記録し、アプリは動作を継続する</li>
+  <li>セッションは20秒ごとに自動保存</li>
+  <li>選んだ機器・音の細かさ・保存形式・ズレ合わせは <code>Music\録音\settings.json</code> に覚える。次に開いたときは同じ設定から始まる（機器が見つからなければ既定の選び方に戻る）。ただし<strong>鳴らす機器だけは、自分で名指ししない限り覚えない</strong>。覚えてしまうと、ヘッドホンを挿しても前の機器へ出し続けることになるため</li>
+</ul>
+
+<h4>キーボード操作</h4>
+<div class="tw"><table>
+<thead><tr><th>キー</th><th>動作</th></tr></thead>
+<tbody>
+<tr><td class="k">Space</td><td>「録る」では録音開始／「重ねる」では再生。録音・再生中は停止</td></tr>
+<tr><td class="k">R</td><td>録音</td></tr>
+<tr><td class="k">Esc</td><td>停止</td></tr>
+<tr><td class="k">Ctrl+S</td><td>保存</td></tr>
+<tr><td class="k">Ctrl+M</td><td>書き出す</td></tr>
+<tr><td class="k">Ctrl+N</td><td>新しく始める</td></tr>
+</tbody></table></div>
+
+<h4>音のチェック（旧・音質診断）</h4>
+<ul>
+  <li><strong>Windows が加工していないかの検査</strong> — 1kHz を鳴らしている間と、静かにしたあとの入力レベルを比べる。60 dB 以上落ちるなら、静かな間だけ入力を潰す処理が働いている（＝録れているのは「実際に鳴っている音」ではない）</li>
+  <li>暗騒音の測定：ノイズフロア、実効ビット深度、直流オフセット、クリップ</li>
+  <li><strong>電源ハム（50/60Hz とその倍音）の検出</strong></li>
+  <li>1/3オクターブの周波数分布グラフ</li>
+  <li>録音済みトラックの解析</li>
+  <li>測定値から「次に何をすべきか」の所見を出す</li>
+</ul>
+
+<p>保存先: <code>%USERPROFILE%\Music\録音\&lt;セッション名&gt;\</code></p>
+
+<!-- ══ 設計方針 ══ -->
+<h2 id="design">音質のための設計方針</h2>
+<div class="tw"><table>
+<thead><tr><th>方針</th><th>理由</th></tr></thead>
+<tbody>
+<tr><td>ASIO / WASAPI 排他を最優先</td><td>Windows のミキサー（自動リサンプル・APO・音声補正）を通らず、ADC の出力がそのまま届く</td></tr>
+<tr><td>信号経路にゲイン・フィルタ・リサンプルを一切入れない</td><td>「実際の音」を変えないため。音量調整は録音後にやる</td></tr>
+<tr><td>既定を 32bit float 保存に</td><td>24bit までの入力を完全に無劣化で保持でき、0 dBFS を超えても後から下げれば救える</td></tr>
+<tr><td>オーディオスレッドでファイル I/O をしない</td><td>書き込み待ちでバッファを落とさないため。専用スレッドへキュー渡し</td></tr>
+<tr><td>取りこぼしを隠さず表示</td><td>無音で埋めて誤魔化さず、件数を画面に出す</td></tr>
+<tr><td>ASIO では録音と再生を同じドライバインスタンスで扱う</td><td>ASIO は1インスタンスしか開けない。かつクロックが共有され、重ね録りでズレが蓄積しない</td></tr>
+<tr><td>再生を始めるとき出力デバイスを作り直す</td><td>WASAPI 出力は数十msのバッファを抱える。作り直さないと「再生が始まった瞬間」がレイテンシ測定時とズレて、重ね録りの頭が合わなくなる</td></tr>
+<tr><td>ホールの響きは録音経路に入れない</td><td>響きは「足すもの」であって「録るもの」ではない。録音経路は無加工のまま、再生と書き出しでだけ通す。だからいつでも切って元に戻せるし、重ね録りのときも録られるのは生の音だけ</td></tr>
+<tr><td>響きは直接音を通さず、別に作って足す</td><td>乾いた音に手を入れると「切れば元通り」が成り立たなくなる。足すだけにしておけば、量 0 で元の音と完全に一致することを検証できる</td></tr>
+</tbody></table></div>
+<p>無劣化であることは自己テストで検証済み:
+24bit PCM → float32 → 24bit PCM の往復で <strong>不一致バイト 0</strong>、float32 は 1.0 超も保持。</p>
+
+<p>ホールの響きも自己テストで検証済み（<code>Tonmeister.exe --rtest</code>）:</p>
+<div class="tw"><table>
+<thead><tr><th>見たもの</th><th>結果</th></tr></thead>
+<tbody>
+<tr><td>分割 FFT 畳み込み ↔ 素直な時間領域の畳み込み</td><td>最大誤差 <strong>7.3×10⁻⁸</strong>（信号の最大値比）</td></tr>
+<tr><td>響きの量 0% のときの出力</td><td>元の音と <strong>不一致サンプル 0 個</strong></td></tr>
+<tr><td>響きの量 100%、響きが届く前（先頭30ms）</td><td>元の音と <strong>不一致サンプル 0 個</strong>（直接音は無加工）</td></tr>
+<tr><td>内蔵ホールの実測 T30 と指定値</td><td>ずれ <strong>3.7〜4.4%</strong>（0.7 / 1.3 / 2.0 / 3.4 秒）</td></tr>
+<tr><td>響きの左右の相関</td><td><strong>0.01〜0.18</strong>（1.0 なら真ん中で団子になる）</td></tr>
+<tr><td>響きの量 100% のときの 響き/直接音</td><td><strong>0.71</strong>（白色雑音）／量つまみに比例</td></tr>
+<tr><td>プリディレイ 25 / 30 / 80ms の実測</td><td><strong>25.2 / 30.2 / 80.2 ms</strong></td></tr>
+<tr><td>処理の速さ（3.4秒の響き・ステレオ）</td><td>実時間の <strong>18倍速</strong></td></tr>
+</tbody></table></div>
+
+<!-- ══ 画面の構成 ══ -->
+<h2 id="screen">画面の構成</h2>
+<p>画面は <strong>「録る」「重ねる」の2モード</strong>に分かれ、アプリが自動で切り替える。</p>
+<div class="tw"><table>
+<thead><tr><th></th><th>出るとき</th><th>見えるもの</th></tr></thead>
+<tbody>
+<tr><td><strong>録る</strong></td><td>トラック 0 本のとき</td><td>状態ピル1行・大きな録音ボタン（外周が入力レベル）・音量メーターと一言の判定</td></tr>
+<tr><td><strong>録音中</strong></td><td>録音を始めた瞬間</td><td>経過時間・走る波形・止めるボタンだけ。上端が録音中バーに差し替わる</td></tr>
+<tr><td><strong>重ねる</strong></td><td>トラック 1 本以上のとき</td><td>トランスポート帯・波形レーン・右のインスペクタ</td></tr>
+</tbody></table></div>
+<p>専門用語（デバイス／API／サンプルレート／ビット深度／レイテンシ）は
+<strong>「詳しい設定」1枚に隔離</strong>してあり、ふだんの録音では見えない。
+やさしい言葉を主に、原語は小さく副えている（検索できなくならないため）。</p>
+<p>1本目が録れると「重ねる」タブのバッジが光るが、<strong>画面は勝手に切り替わらない</strong>。</p>
+<p>上部の録音名はクリックで書き換えられる（フォルダ名は変えない。
+録音中のファイルを掴んだままフォルダを動かすと、録れた音を失いかねないため）。</p>
+
+<h3>レーンの波形について</h3>
+<p>波形は <strong>音の大きさ（dB）の目盛り</strong>で描いている（−60 dBFS で中心、0 dBFS で枠いっぱい）。</p>
+<p>素の振幅のまま描くと、−36 dBFS で録れた音は 62px の枠の 1.6%（1px 未満）にしかならず、
+線1本にしか見えない。かといってトラックごとに倍率を変えると、
+トラック同士の大きさを目で比べられなくなる。dB の目盛りなら両方成り立つ。</p>
+<p>一度読んだ波形は覚えておき、タブを行き来しても読み直さない。</p>
+
+<h3>見た目</h3>
+<p>19世紀ドイツの譜面や楽器の箔押しから借りている。<strong>黒漆に金。</strong></p>
+<p>意匠は<strong>図像と構造だけ</strong>で出している。国章・軍章の類（鷲・十字）は、
+いまの目には政治的な記号に見えるので使わない。代わりに同時代の民生品の意匠を借りる:</p>
+<ul>
+  <li><strong>銘板と鋲</strong> — 題字は枠を回し、四隅に鋲を打った真鍮の銘板として置く</li>
+  <li><strong>彫金の地紋（ギヨシェ）</strong> — 録音ボタンの背後に、旋盤で引いた唐草の連続曲線を薄く敷く。紙幣・銘板・時計の文字盤に使われた彫り方</li>
+  <li><strong>太細罫</strong> — 帯の下は太い罫の下に間を置いて細い罫。19世紀の扉ページの組み方</li>
+  <li><strong>花形の締め</strong> — 版面の末尾を罫と放射の花形で閉じる</li>
+  <li><strong>節見出しの金罫</strong> — 「詳しい設定」の各節を一本の細い金罫で切る</li>
+</ul>
+
+<p>色は3つしか使わない。</p>
+<div class="tw"><table>
+<thead><tr><th></th><th>色</th><th>意味</th></tr></thead>
+<tbody>
+<tr><td><strong>金</strong></td>
+    <td class="k"><span class="sw" style="background:#C9A227"></span>#C9A227（明 #E3C766 / 鈍 #8A6E1E）</td>
+    <td>正しい・選ばれている・良好</td></tr>
+<tr><td><strong>深紅</strong></td>
+    <td class="k"><span class="sw" style="background:#7E2A22"></span>#7E2A22（明 #A03A2E）</td>
+    <td>録音・危険</td></tr>
+<tr><td><strong>象牙</strong></td>
+    <td class="k"><span class="sw" style="background:#EDE6D6"></span>#EDE6D6 / 副 #B3A98F / 注釈 #847A64</td>
+    <td>文字</td></tr>
+</tbody></table></div>
+<p>地は黒漆 <code>#0C0B09</code>、面 <code>#15130F</code>、罫 <code>#332D20</code>、強い罫は金 <code>#8A6E1E</code>。
+警告だけは赤銅 <code>#B06A2C</code> を使い、金と混ざらないようにしている。</p>
+<p>第二の色として<strong>ベルリン藍</strong>（プルシアンブルー
+<span class="sw" style="background:#22406B"></span><code>#22406B</code> /
+<span class="sw" style="background:#4E7CB5"></span><code>#4E7CB5</code>）を使う。
+18世紀のベルリンで作られた顔料で、19世紀の製図や紙幣に広く使われた。
+役割は「音のこの区間を選んでいる」— 金（＝設定が正しい）とぶつからないよう分けてある。</p>
+<ul>
+  <li>欧文は <strong>Palatino Linotype</strong>、和文は <strong>游明朝</strong>、数字と時間は <strong>Courier New</strong>（活字と打鍵機の名残）</li>
+  <li><strong>発光は使わない。</strong> 光るふちや影のかわりに、余白と細い金の罫、そして二重罫（金・地・鈍い金）で格を出す</li>
+  <li>角丸はほぼ落とし（2px）、押しボタンは金の箔押しの小札として扱う</li>
+  <li>選ばれているタブ・録りの丸ボタン・書き出しの札はすべて金地に黒文字。<strong>深紅は録音のためだけに取ってある</strong></li>
+  <li>録音ボタンは黒地に浮かぶ深紅の円盤で、太い金の輪が縁を締め、その外周が入力レベルの目盛りを兼ねる</li>
+  <li>録音中の画面は、広い黒の中に経過時間だけが立つ</li>
+</ul>
+
+<h4>ドイツ的な意匠</h4>
+<ul>
+  <li>題字は<strong>疎組（Sperrsatz）</strong>。<code>T O N M E I S T E R</code> と字間を空け、その下に細い金の罫、さらに下に副題を中央で受ける</li>
+  <li>帯の下は<strong>二重罫</strong>（金・地・鈍い金）。1本のグラデーションブラシで描いている</li>
+  <li>「詳しい設定」の節見出しには、下に<strong>細い金の罫</strong>を一本ずつ入れて段を切る</li>
+  <li>「録る」画面の末尾は、印刷所の飾り罫にならって <strong>罫—菱形—罫</strong> で締める</li>
+</ul>
+<p>言葉づかいは変えていない。<strong>見た目だけが古く、書いてあることは平易なまま。</strong></p>
+
+<!-- ══ 使い方 ══ -->
+<h2 id="usage">使い方</h2>
+
+<h3>1本目を録る</h3>
+<ol>
+  <li>起動すると自動でマイクにつながり、メーターが動き出す（つながらないときは状態ピルの「変える」→「詳しい設定」で選ぶ）</li>
+  <li>楽器をいちばん強く鳴らして、メーターが<strong>金の帯（−12〜−6 dBFS）</strong>に収まるよう機材側で調整。帯から外れていれば、メーターの下に何をすればよいかが出る</li>
+  <li>「録音する」（Space でも可）→「■ 録音をやめる」（Esc / Space）</li>
+</ol>
+
+<h3>重ね録りする</h3>
+<ol>
+  <li><strong>ヘッドホンを着ける</strong>（スピーカーだと再生音がマイクに回り込んで二重に混ざる）</li>
+  <li>「重ねる」タブ →「ズレ合わせ 未測定」を押して測る</li>
+  <li>「録る場所」が「新しいトラックに録る」になっていることを確認して録音ボタン</li>
+  <li>全部録れたら「書き出す」</li>
+</ol>
+
+<h3>同じパートを録り直す</h3>
+<p>「録る場所」を「〈トラック名〉に録り足す」にして録る。
+そのトラックは録音中の再生から自動的に外れるので、前の録りが耳に返ってこない。
+録り終わるとレーンの下に「1回目・2回目…」の丸ボタンが並ぶので、聴き比べて選ぶ。
+<strong>古い録りは消えない</strong>。</p>
+
+<h3>一部だけ録り直す・切り出す</h3>
+<p>レーンの波形をドラッグして範囲を選ぶと、その行の下段が
+「ここだけ録り直す」「選んだところを切り出す」に変わる。
+どちらも元の録音は書き換えず、新しい録りとして増える。
+細かく見たいときは、右のインスペクタの「波形を見て直す」から拡大できる。</p>
+
+<h3>ホールの響きをつける</h3>
+<p>「重ねる」画面の右、<strong>「鳴らす場所」</strong>の札で切り替える。トラックごとではなく<strong>録音まるごと</strong>にかかる。
+ホールは場所であって、楽器ごとに別の場所にいることはないため。</p>
+<ol>
+  <li>「ホールの響きを足す」を入れる</li>
+  <li>ホールを選ぶ。迷ったら <strong>室内楽ホール</strong>（独奏・室内楽なら大ホールは長すぎることが多い）</li>
+  <li><strong>響きの量</strong>を上げていって、楽器の輪郭がぼやける手前で止める。25〜35% あたりが目安</li>
+</ol>
+<div class="tw"><table>
+<thead><tr><th>つまみ</th><th>何が変わるか</th></tr></thead>
+<tbody>
+<tr><td>響きの長さ</td><td>残響時間（RT60）。長いほど広く、遠くに聞こえる</td></tr>
+<tr><td>響きの量</td><td>直接音に対する響きの大きさ。100% で直接音と同じくらい</td></tr>
+<tr><td>直接音から響きまでの間</td><td>プリディレイ。長いほど壁が遠い＝広い場所に聞こえる。楽器の輪郭も保たれる</td></tr>
+</tbody></table></div>
+<p><strong>実在のホールで鳴らす。</strong> 「読み込んだ響き」を選ぶと、そのホールを録ったインパルス応答（IR）の
+WAV を指定できる。IR の先頭に直接音が入っていれば取り除く（直接音は元の録音がそのまま担うため、
+残すと二重になる）。10秒を超えるぶんは切り捨てる。</p>
+<p><strong>録った音は変わらない。</strong> 響きは再生と書き出しのときだけ通る非破壊の処理で、
+元の WAV には一切触らない。切ればその場で元に戻る。
+重ね録りの最中に録られるのも生の音だけで、響きは記録されない。</p>
+<p>書き出しは響きの尾のぶん自動で長くなる。書き出し画面に「約◯分◯秒」として出る。</p>
+
+<h3>レイテンシ補正について</h3>
+<p>「聴こえた音」に合わせて弾いた演奏は、<strong>出力遅延＋入力遅延</strong>のぶんだけ後ろにズレて記録される。
+補正しないと重ねるたびにどんどん遅れていく。このアプリは録音の頭を指定サンプル数だけ捨てて揃える。</p>
+<p><strong>自動測定</strong>は 1kHz のテスト音を鳴らし、それが録音側に返ってくるまでを測る。
+物音を誤検出しないよう、(1) 1kHz 成分だけを見る整合フィルタ、(2) 3回測って値が一致したときだけ採用、
+の二段構えにしている。一致しなければ数字を返さず「測れなかった」と表示する。</p>
+<ul>
+  <li>ヘッドホンで測るときは、片方をマイクに近づける</li>
+  <li>測定できないときは、Windows の音量が下がっていないか確認する</li>
+  <li>ASIO はクロックが共有されるので、そもそもズレが小さい</li>
+  <li>測定値は機材構成を変えたら測り直す</li>
+</ul>
+<p>参考値（この開発機・WASAPI 共有・内蔵マイク＋内蔵スピーカー）: 往復 <strong>約 165 ms</strong>。</p>
+
+<h3>ダイレクトモニタリングについて</h3>
+<div class="note warn"><strong>必ずヘッドホンを使うこと。</strong>
+スピーカーだとマイク→スピーカー→マイクの輪ができてハウリングする。</div>
+<p>WASAPI 共有では往復 165 ms あるため、演奏しながら聴くには遅すぎる。
+アコースティック楽器なら生音が直接耳に入るので、そもそもモニターに返す必要は薄い。
+ASIO のオーディオI/Fを使う場合や、I/F 側のダイレクトモニター機能を使う場合に意味が出る。</p>
+
+<h3>音のチェックの読み方</h3>
+<p>「録る」画面の「音のチェックをする」、または「重ねる」画面の「音のチェック」から開く。
+数字より先に<strong>結論と次の一手</strong>が結論カードに出る。数値カードはその裏づけ。</p>
+<div class="tw"><table>
+<thead><tr><th>項目</th><th>見方</th></tr></thead>
+<tbody>
+<tr><td>ノイズフロア（RMS）</td><td>低いほど良い。−85 dBFS 以下なら静か、−55 dBFS より上なら要改善</td></tr>
+<tr><td>実効ビット深度</td><td>その暗騒音の下で実際に使えているビット数。12 bit を切るなら、24bit で録る前にノイズを下げるほうが効く</td></tr>
+<tr><td>電源ハム</td><td>暗騒音より +12 dB 以上なら対策の価値あり。電源アダプタ・ディスプレイからマイクを離す、USBポートを変える</td></tr>
+<tr><td>直流オフセット</td><td>ヘッドルームを無駄に食う。大きければ機材側の設定を疑う</td></tr>
+</tbody></table></div>
+
+<h3>再生しても音が聞こえないとき</h3>
+<p>音が出ない原因は、ほとんどが<strong>アプリの外</strong>にある。上から順に確かめる。</p>
+<ol>
+  <li><strong>Windows 側の音量</strong><br>
+    タスクバーのスピーカーを見る。この開発機では <strong>11%</strong> まで下がっていて、
+    小さく録れた音がまったく聞こえない状態だった。
+    再生を始めたときに消音・20% 未満なら、アプリが一度だけ知らせ、
+    トランスポート帯に「音は出ています・機器の音量 11%」と出し続ける。
+    <div class="note"><strong>再生中、トランスポート帯の目盛りは出力のレベルを指す。</strong>
+    ここが振れていれば音は確かに出ており、原因は機器側にある。
+    1.5 秒以上まったく振れなければ「音が出ていません」と出る。</div>
+  </li>
+  <li><strong>録れている音が小さすぎる</strong><br>
+    目標は最大音で <strong>−12〜−6 dBFS</strong>。これを大きく下回ると、
+    Windows 側の音量を上げてもまだ小さい。
+    「音のチェック」→「録った音を調べる」で、そのトラックのいちばん大きいところが分かる。
+    <p>参考（この開発機で内蔵マイク・共有モードで録ったもの）:</p>
+    <div class="tw"><table>
+    <thead><tr><th></th><th>ピーク</th><th>RMS</th></tr></thead>
+    <tbody>
+    <tr><td>13秒のトラック</td><td class="num">−35.8 dBFS</td><td class="num">−59.4 dBFS</td></tr>
+    <tr><td>ほかのトラック</td><td class="num">−47〜−58 dBFS</td><td class="num">−59〜−96 dBFS</td></tr>
+    </tbody></table></div>
+    <p>目標より 30 dB 以上低い。内蔵マイク＋共有モードでは
+    Windows の音声補正が入力を絞るため（下の「この開発機で分かったこと」を参照）、
+    まず<strong>排他モードか ASIO の機器</strong>に替えるのが本筋。</p>
+  </li>
+  <li><strong>鳴らす機器の選択</strong><br>
+    「詳しい設定」→「重ね録りのとき、前の音を鳴らす機器」。
+    <p>既定は <strong>「自動（Windows がいま使っている機器）」</strong>。
+    ヘッドホンを挿せば、そのままヘッドホンへ移る。</p>
+    <p>機器を名指しで選ぶと、以後そこへ<strong>固定</strong>される。固定したまま
+    Windows 側が別の機器に変わると「他のアプリでは鳴るのにこのアプリだけ鳴らない」が起きるので、
+    その状態で再生すると、画面の上に
+    「音は『スピーカー』へ出しています。Windows がいま使っているのは『ヘッドホン』です」と出し、
+    その場で戻せるようにしてある。</p>
+  </li>
+  <li><strong>トラックが消音・単独になっていないか</strong><br>
+    レーンの「消音」が入っている、または別のトラックだけ「単独」になっていると鳴らない。</li>
+</ol>
+<p>エンジンの再生経路そのものは <code>--mtest</code> で検証できる。
+「再生経路のループバック確認」が OK なら、音は確かに出力へ届いている。</p>
+
+<h3>この開発機で分かったこと（重要）</h3>
+<p>内蔵マイク＋WASAPI 共有モードでは、<strong>Windows の音声補正が静かな間だけ入力を潰していました</strong>。</p>
+<div class="tw"><table>
+<thead><tr><th></th><th>RMS</th></tr></thead>
+<tbody>
+<tr><td>入力を開いた直後</td><td class="num">−88.9 dBFS</td></tr>
+<tr><td>数秒後</td><td class="num">−133.8 dBFS</td></tr>
+<tr><td>さらに後</td><td class="num">−149.1 dBFS</td></tr>
+<tr><td>1kHz を鳴らす</td><td class="num"><strong>−73.6 dBFS</strong>（+75 dB 復帰）</td></tr>
+<tr><td>止めて3秒</td><td class="num">−113.5 dBFS（再び低下）</td></tr>
+</tbody></table></div>
+<p>音を出すと即座に戻り、止めるとまた落ちるので、機材が静かなのではなく<strong>OSが絞っている</strong>と分かります。</p>
+<p>この状態では暗騒音の測定値（「−159 dBFS」「実効 25.6 bit」など）は<strong>機材の性能ではありません</strong>。
+実在の機材でそんな数値は出ないので、アプリ側でも −120 dBFS を下回ったら
+「あり得ない静けさ」として警告するようにしてあります。</p>
+<p>対処は「オーディオ拡張を無効にする」か、<strong>排他モード／ASIO が使える機器を用意する</strong>こと。
+このアプリが排他モードと ASIO を最優先にしているのは、まさにこれを避けるためです。</p>
+
+<h3>排他モードが選べないとき</h3>
+<p>Windows の 設定 → システム → サウンド → デバイスのプロパティ → 詳細設定 で
+「アプリケーションによるこのデバイスの排他制御を許可する」を有効にする。
+内蔵マイクなど、そもそも排他モードに対応しないデバイスもある（その場合は共有モード）。</p>
+
+<!-- ══ 開発用モード ══ -->
+<h2 id="devmode">開発用モード</h2>
+
+<pre><code>dotnet run -- --selftest 2 C:\temp\report.txt</code></pre>
+<p>変換の無劣化検証・デバイス列挙・対応フォーマット・実録音テスト。</p>
+
+<pre><code>dotnet run -- --mtest C:\temp\mtest.txt</code></pre>
+<p>多重録音の通しテスト。重ね録り・レイテンシ補正の削り量・テイク追加と再生からの除外・
+長時間録音の自動分割・セッション保存/読込・ミュート/ソロ・ミックスダウン・
+モニターのバッファと配線・再生経路のループバック確認・レイテンシ自動測定。</p>
+
+<pre><code>dotnet run -- --atest C:\temp\atest.txt</code></pre>
+<p>解析の数値校正テスト。既知の合成信号（正弦波・量子化ノイズ・ハム・クリップ・広帯域ノイズ）を入れて、
+ピーク／RMS／実効ビット深度／スペクトル／ハム検出が理論値と合うかを確認する。</p>
+
+<pre><code>dotnet run -- --etest C:\temp\etest.txt</code></pre>
+<p>編集と後処理の検証。既知の合成音（440/880/220Hz を1秒ずつ）を使い、頭出し・切り出し・
+パンチインの差し替え位置を周波数で確認し、継ぎ目の不連続、波形データの粒度、
+ハム除去の減衰量と楽音への影響、ノイズゲートの効き、FLAC の可逆性（1サンプル単位で照合）を測る。</p>
+
+<pre><code>dotnet run -- --rtest C:\temp\rtest.txt</code></pre>
+<p>ホールの響きの検証。分割 FFT 畳み込みを素直な時間領域の畳み込みと突き合わせ、
+響きの量 0% で元の音とサンプル単位で一致すること、内蔵ホールの実測 T30、左右の相関、
+プリディレイの実測位置、書き出しに尾が入ること、処理の速さを測る。</p>
+
+<pre><code>dotnet run -- --probe C:\temp\probe.txt</code></pre>
+<p>排他モードでどのフォーマットが通るかを1つずつ試して記録する（デバイス相性の切り分け用）。</p>
+
+<h3>実行ファイルを作り直す</h3>
+<pre><code>cd desktop/InstRecorder &amp;&amp; dotnet publish -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o ../../app</code></pre>
+
+<!-- ══ 構成 ══ -->
+<h2 id="tree">構成</h2>
+<pre><code>app/                          配布用の実行ファイル（Tonmeister.exe）
+desktop/InstRecorder/
+  Audio/
+    AudioTypes.cs             デバイス・フォーマット・保存形式の型
+    IAudioInput.cs            入力の共通インターフェイス
+    WasapiInput.cs            WASAPI 入力（排他はバッファ長を総当たりで確定）
+    AsioInput.cs              ASIO 入力（再生も同じインスタンスで扱う）
+    DeviceScanner.cs          デバイス列挙と対応フォーマット判定
+    WaveFormatHelper.cs       24bit-in-32bit コンテナ形式の生成（NAudio に無いため自前）
+    SampleConvert.cs          整数 PCM ⇔ float の無劣化変換
+    SwitchableWaveProvider.cs 中身を差し替えられる出力元（ASIO 用）
+    MonitorBuffer.cs          モニター用リングバッファ（遅延が育たないよう間引く）
+    PartWavWriter.cs          4GB で自動分割する WAV 書き出し
+    Take.cs / Track.cs        テイクとトラック
+    Session.cs                セッション（JSON で保存・旧形式からの移行つき）
+    SessionMix.cs             全トラックのミックス（音量・ミュート・ソロを毎回反映。ホールもここで挿す）
+    Mixdown.cs                1本の WAV への書き出し
+    SignalAnalysis.cs         FFT による音質解析（ノイズフロア・ハム・スペクトル）
+    TakeReader.cs             テイクを1本の連続した音として読む（分割・頭出し対応）
+    AudioEdit.cs              切り出しとパンチイン（等パワークロスフェード）
+    WaveformData.cs           波形描画用の山谷データ
+    TrackProcessing.cs        非破壊の後処理（ハム除去ノッチ・ノイズゲート）
+    HallReverb.cs             ホールの響きの設定（種類・長さ・量・プリディレイ）
+    ImpulseResponse.cs        響きのもと（鏡像法の初期反射＋3帯域の後部残響／IR 読み込み）
+    ConvolutionReverb.cs      分割 FFT 畳み込み（自前 FFT つき）
+    FlacExport.cs             FLAC 書き出し（24bit 可逆）
+    WavRepair.cs              壊れた WAV ヘッダの修復
+    RecorderEngine.cs         録音・再生・モニター・レイテンシ測定の中枢
+  MainWindow.xaml(.cs)        メイン UI（「録る」「重ねる」の2モード）
+  TrackLane.xaml(.cs)         「重ねる」モードの1トラック分のレーン
+  SettingsWindow.xaml(.cs)    詳しい設定（音の入り口・細かさ・ズレ合わせ）
+  ExportWindow.xaml(.cs)      書き出す（用途で選ぶ2枚のカード）
+  EditorWindow.xaml(.cs)      波形を見て直す UI
+  DiagnosticsWindow.xaml(.cs) 音のチェック UI（結論カード方式）
+  InputSetup.cs               入力設定の共有状態（走査・選択・開閉・鳴らす側の音量）
+  AppSettings.cs              起動をまたいで覚える設定（機器・細かさ・ズレ合わせ）
+  WaveformCache.cs            一度読んだ波形を覚えておく
+  SessionsWindow.xaml(.cs)    録音一覧
+  MeterScale.cs               dBFS → メーター位置の目盛り
+  LatencyMeasure.cs           ズレ合わせ測定の共通の流れ
+  Theme.xaml                  共通のテーマ（黒漆と金・色と書体と部品の見た目）
+  App.xaml.cs                 起動・例外記録・各種テストモード
+  MultiTest.cs / AnalysisTest.cs / EditTest.cs / Probe.cs   開発用の検証コード</code></pre>
+
+<!-- ══ 予定 ══ -->
+<h2 id="roadmap">この先の予定</h2>
+<ul>
+  <li><strong>Web 版</strong>: ブラウザの自動ゲイン補正・ノイズ抑制・エコーキャンセルを明示的に切り、デスクトップ版の音と比較できるようにする</li>
+  <li><strong>同時多入力録音</strong>: 多入力I/Fの複数チャンネルを同時に別トラックへ。トラック管理の土台は出来ているので録音モードを1つ足すだけ（※検証には多入力I/Fが必要）</li>
+  <li><strong>チューナー / メトロノーム</strong>（保留中）</li>
+  <li><strong>スマホ版</strong>（※ビルド環境が無いため未着手）</li>
+</ul>
+
+<!-- ══ 制約 ══ -->
+<h2 id="limits">既知の制約</h2>
+<ul>
+  <li>WASAPI では録音と再生が別クロックなので、長時間の重ね録りでは末尾に向かって徐々にズレる可能性がある。ASIO なら共有クロックなので起きない</li>
+  <li>トラックは全て 0 秒から始まる（途中から録り「始める」のは未対応。途中を録り「直す」パンチインは対応済み）</li>
+  <li>FLAC は仕様上 32bit float を扱えないため、24bit で書き出す。24bit で録った音は完全に無劣化だが、32bit float の音は変換が入る（0 dBFS 超は失われる）</li>
+  <li>パンチインの継ぎ目は 5ms のクロスフェードで繋ぐため、その区間だけは元の波形と厳密には一致しない</li>
+</ul>
+
+<div class="fleuron">❖</div>
+<footer>T O N M E I S T E R</footer>
+
+</div>
+</body>
+</html>

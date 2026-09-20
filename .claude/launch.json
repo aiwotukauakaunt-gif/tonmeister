@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "tonmeister-web",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["web/serve.js"],
+      "port": 8787,
+      "autoPort": true
+    }
+  ]
+}

@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tonmeister — 録音</title>
+<link rel="stylesheet" href="css/theme.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0C0B09">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tonmeister">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png" type="image/png">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ================= 上端：ふだんはタブバー ================= -->
+  <header id="tabbar" class="topbar">
+    <div class="tb-left">
+      <!-- 機械に打たれた銘板。枠を回し、四隅に鋲を打つ。 -->
+      <div class="plate">
+        <div class="plate-inner">
+          <div class="plate-title">T O N M E I S T E R</div>
+          <div class="plate-rule"></div>
+          <div class="plate-sub">録　音</div>
+        </div>
+        <i class="rivet tl"></i><i class="rivet tr"></i>
+        <i class="rivet bl"></i><i class="rivet br"></i>
+      </div>
+      <div class="tb-divider"></div>
+
+      <nav class="tabs">
+        <button id="tab-record" class="tab is-active" type="button"><span>録る</span></button>
+        <button id="tab-overdub" class="tab" type="button">
+          <span>重ねる</span><b id="tab-badge" class="badge">まだ0本</b>
+        </button>
+      </nav>
+    </div>
+
+    <div class="tb-right">
+      <span id="txt-session" class="session-name" title="クリックすると、この録音の名前を変えられます"></span>
+      <b id="badge-finish" class="badge-finish" hidden title="仕上げ（盛り）が入っています。素の音はそのまま残っています">盛り</b>
+      <input id="edt-session" class="session-edit" hidden>
+      <button id="btn-check" class="btn btn-top" type="button" hidden>音のチェック</button>
+      <button id="btn-export" class="btn btn-accent" type="button" hidden>書き出す</button>
+      <div class="menu-wrap">
+        <button id="btn-list" class="btn btn-top" type="button">録音一覧</button>
+        <div id="list-popup" class="popup" hidden>
+          <button id="btn-new-session" class="menu-item" type="button">新しく始める</button>
+          <button id="btn-open-sessions" class="menu-item" type="button">前の続き</button>
+          <button id="btn-export-folder" class="menu-item" type="button">このセッションを丸ごと書き出す</button>
+          <button id="btn-import-session" class="menu-item" type="button">読み込む（session.json ＋ WAV）</button>
+        </div>
+      </div>
+      <button id="btn-settings" class="btn btn-top" type="button">詳しい設定</button>
+      <button id="btn-lang" class="btn btn-top lang" type="button" title="Show in English">EN</button>
+    </div>
+  </header>
+
+  <!-- ================= 上端：録音中はこちらに差し替わる ================= -->
+  <header id="recbar" class="recbar" hidden>
+    <i class="rec-dot"></i>
+    <b class="rec-title">録音中</b>
+    <span id="txt-rec-target" class="rec-target"></span>
+    <span id="txt-rec-save" class="rec-save">約2秒ごとに自動保存中・取りこぼし 0</span>
+  </header>
+
+  <main id="stage">
+
+    <!-- ================= 01「録る」モード ================= -->
+    <section id="pane-record" class="pane pane-record">
+      <div class="record-column">
+
+        <!-- 手順の札。いま何をする番なのかを、常に1つだけ光らせる。 -->
+        <div id="pnl-steps" class="steps">
+          <div class="step" data-step="1"><em>１</em><span>マイクを確かめる</span></div>
+          <div class="step-arrow">→</div>
+          <div class="step" data-step="2"><em>２</em><span>音量を合わせる</span></div>
+          <div class="step-arrow">→</div>
+          <div class="step" data-step="3"><em>３</em><span>録音する</span></div>
+        </div>
+
+        <!-- 状態ピル -->
+        <div class="pill">
+          <i id="status-dot" class="dot"></i>
+          <span id="txt-status-line">マイクを準備しています…</span>
+          <button id="btn-change-input" class="linkbtn" type="button">変える</button>
+        </div>
+
+        <!-- 経路の格：開いた瞬間に測って1行にする -->
+        <div id="path-grade" class="path-grade" hidden>
+          <b id="txt-grade-mark" class="grade-mark">—</b>
+          <div class="grade-body">
+            <span id="txt-grade-title" class="grade-title"></span>
+            <span id="txt-grade-summary" class="grade-summary mono"></span>
+          </div>
+          <button id="btn-grade-detail" class="linkbtn" type="button">詳しく</button>
+          <button id="btn-grade-again" class="linkbtn" type="button">測り直す</button>
+        </div>
+        <div id="pnl-grade-detail" class="grade-detail" hidden></div>
+
+        <!-- 録音ボタン（外周が入力レベルのメーター） -->
+        <div class="rec-stage">
+          <canvas id="guilloche" class="guilloche" width="520" height="520"></canvas>
+          <canvas id="ring" class="ring" width="290" height="290"></canvas>
+          <button id="btn-record-big" class="rec-button" type="button">
+            <i class="rec-glyph"></i>
+            <b id="txt-record-big">録音する</b>
+            <small id="txt-record-hint">Space でも押せます</small>
+          </button>
+        </div>
+
+        <!-- 横メーター -->
+        <div class="meter-block">
+          <div class="meter-head">
+            <span>音の大きさ</span><span class="mono">dBFS</span>
+          </div>
+          <div class="meter-frame">
+            <div class="meter-well">
+              <div id="meter-good" class="meter-good"></div>
+              <div id="meter-level" class="meter-level"></div>
+            </div>
+          </div>
+          <canvas id="scale" class="scale" height="17"></canvas>
+          <div class="meter-labels">
+            <span class="faint">小さすぎ</span>
+            <span id="txt-good-label" class="gold">ちょうどよい</span>
+            <span class="faint">割れる</span>
+          </div>
+          <p id="txt-verdict" class="verdict">マイクを選んでください。</p>
+          <p id="txt-storage" class="faint center storage"></p>
+        </div>
+
+        <div class="row-center">
+          <button id="btn-trial" class="btn btn-ghost" type="button" title="いちばん強く鳴らした 6 秒から、入力つまみをどうすべきかを言います">試し弾きで音量を決める</button>
+          <button id="btn-check2" class="btn btn-ghost" type="button">音のチェックをする</button>
+          <button id="btn-monitor" class="btn btn-ghost" type="button">ヘッドホンで自分の音を聞く</button>
+        </div>
+        <p id="txt-trial" class="trial center" hidden></p>
+        <p id="txt-monitor-info" class="faint center"></p>
+
+        <!-- 版面の締め。印刷所の飾り罫にならって、細い金の罫と菱形で閉じる。 -->
+        <div class="closer">
+          <span class="rule"></span><canvas id="rosette" width="22" height="22"></canvas><span class="rule"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 02 録音中 ================= -->
+    <section id="pane-recording" class="pane pane-recording" hidden>
+      <div class="rec-column">
+        <div id="txt-big-time" class="big-time">00:00:00.0</div>
+        <div class="live-block">
+          <div class="live-frame"><canvas id="live-wave"></canvas></div>
+          <div class="live-foot">
+            <span class="dim">いま録れている音</span>
+            <span id="txt-live-level" class="gold"></span>
+          </div>
+        </div>
+        <div class="row-center">
+          <button id="btn-stop-big" class="btn-stop-big" type="button">■ 録音をやめる</button>
+          <span class="faint">Esc / Space</span>
+        </div>
+        <div id="align-toast" class="align-toast" hidden>
+          <span>ズレ合わせを測っていないので、後ろにズレて録れます</span>
+          <button id="btn-toast-measure" class="btn btn-small" type="button">測る</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 03「重ねる」モード ================= -->
+    <section id="pane-overdub" class="pane pane-overdub" hidden>
+
+      <!-- トランスポート帯 -->
+      <div class="transport">
+        <div class="tp-buttons">
+          <button id="btn-record-small" class="btn-transport is-rec" type="button" title="録音する（R）"><i></i></button>
+          <button id="btn-play" class="btn-transport" type="button" title="はじめから聞く（Space）">▶</button>
+          <button id="btn-stop" class="btn-transport dim" type="button" title="やめる（Esc）">■</button>
+        </div>
+        <div id="txt-time" class="tp-time">00:00:00.0</div>
+        <div class="tp-meter">
+          <div class="mini-well">
+            <div id="mini-good" class="meter-good"></div>
+            <div id="mini-level" class="meter-level"></div>
+          </div>
+          <span id="txt-mini-verdict" class="gold small"></span>
+        </div>
+        <div class="tp-listen" title="再生のとき、素の音を聞くか、仕上げを通した音を聞くか">
+          <span class="dim small">聞く</span>
+          <div class="listen-switch">
+            <button id="lst-pure" class="lst on" type="button">素</button>
+            <button id="lst-finished" class="lst" type="button">仕上げ</button>
+          </div>
+        </div>
+        <div class="tp-target">
+          <label class="dim small" for="cmb-target">録る場所</label>
+          <select id="cmb-target" class="select"></select>
+          <button id="btn-align" class="btn btn-small align-pill" type="button">ズレ合わせ 未測定</button>
+        </div>
+      </div>
+
+      <div class="od-body">
+        <div class="od-lanes">
+          <div class="ruler"><canvas id="ruler"></canvas></div>
+          <div class="lane-scroll">
+            <div id="lane-host"></div>
+            <div class="add-layer">
+              <button id="btn-add-layer" class="btn btn-dashed" type="button">＋ この上に重ねて録る</button>
+              <span class="faint">ヘッドホンを着けてから押してください</span>
+              <span class="spacer"></span>
+              <button id="btn-add-wav" class="btn btn-small ghosty" type="button" title="WAV を新しいトラックとして足します（変換なし）。ここへ落としても足せます">WAV を足す</button>
+              <input id="file-wav" type="file" accept=".wav,audio/wav" multiple hidden>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右インスペクタ -->
+        <aside class="inspector">
+          <div class="insp-scroll">
+            <h3 class="sec-title">いま選んでいるもの</h3>
+            <p id="txt-no-selection" class="sub">波形をクリックするとそのトラックを選べます。ドラッグすると「使いたいところ」を選べます。</p>
+
+            <div class="card finish-card mt10">
+              <b class="card-title">仕上げ（盛る）— 全体</b>
+
+              <!-- 段階ダイヤル。回すだけで中身が決まる。細かく触ると「自分で決める」になる -->
+              <div id="dial" class="dial">
+                <button class="dial-step" data-level="0" type="button"><em>0</em><span>素</span></button>
+                <button class="dial-step" data-level="1" type="button"><em>1</em><span>整える</span></button>
+                <button class="dial-step" data-level="2" type="button"><em>2</em><span>部屋</span></button>
+                <button class="dial-step" data-level="3" type="button"><em>3</em><span>ホール</span></button>
+              </div>
+              <p id="txt-dial-desc" class="faint mt8"></p>
+
+              <button id="btn-finish-detail" class="linkbtn mt8" type="button">細かく決める ▸</button>
+              <div id="pnl-finish-detail" class="mt8" hidden>
+                <div class="switch-row">
+                  <span>風音（30 Hz 以下）を切る</span>
+                  <button id="tgl-rumble" class="switch" type="button" role="switch" aria-checked="false"></button>
+                </div>
+                <div class="switch-row">
+                  <span>音量をそろえる（いちばん大きいところを −1 dBTP に）</span>
+                  <button id="tgl-normalize" class="switch" type="button" role="switch" aria-checked="false"></button>
+                </div>
+                <div class="switch-row">
+                  <span>ホールの響きを足す</span>
+                  <button id="tgl-reverb" class="switch" type="button" role="switch" aria-checked="false"></button>
+                </div>
+                <div id="row-miccal" class="switch-row" hidden>
+                  <span>マイクの色を戻す（較正ファイル）</span>
+                  <button id="tgl-miccal" class="switch" type="button" role="switch" aria-checked="false"></button>
+                </div>
+                <div id="pnl-reverb" class="reverb-panel" hidden>
+                  <div class="chips" id="hall-chips"></div>
+                  <label class="slider-row"><span>響きの長さ</span><input id="rng-rv-seconds" class="range" type="range" min="0.2" max="6" step="0.1"><b id="txt-rv-seconds" class="mono"></b></label>
+                  <label class="slider-row"><span>響きの量</span><input id="rng-rv-amount" class="range" type="range" min="0" max="100" step="1"><b id="txt-rv-amount" class="mono"></b></label>
+                  <label class="slider-row"><span>直接音から響きまで</span><input id="rng-rv-pre" class="range" type="range" min="0" max="150" step="1"><b id="txt-rv-pre" class="mono"></b></label>
+                  <p class="faint">直接音には触りません。響きだけを足すので、量 0% は素と1サンプルも違いません。</p>
+                </div>
+              </div>
+
+              <div class="gold-rule mt10"></div>
+              <div class="row mt8">
+                <span class="dim small">盛り度</span>
+                <b id="txt-grade" class="grade ml8">—</b>
+                <span class="spacer"></span>
+                <button id="btn-measure-finish" class="btn btn-small" type="button">測る</button>
+              </div>
+              <div class="grade-well mt8"><div id="grade-fill" class="grade-fill"></div></div>
+              <p id="txt-finish-measure" class="faint mt6"></p>
+              <button id="btn-hold-pure" class="btn btn-small full mt8" type="button" title="押している間だけ素の音になります（キーボードの B でも）">押している間だけ素で聞く（B）</button>
+              <p id="txt-finish-state" class="faint mt8">いまは何も盛っていません。聞こえるのも書き出すのも「素」そのものです。</p>
+            </div>
+
+            <div id="pnl-inspector" hidden>
+              <div class="card">
+                <b id="txt-sel-title" class="card-title"></b>
+                <p id="txt-sel-body" class="sub"></p>
+              </div>
+
+              <div class="card mt10 finish-card">
+                <b class="card-title">仕上げ（盛る）— このトラック</b>
+                <div class="switch-row">
+                  <span>電源のブーンという音を消す</span>
+                  <button id="tgl-hum" class="switch" type="button" role="switch" aria-checked="false"></button>
+                </div>
+                <div class="switch-row">
+                  <span>弾いていない間を静かにする</span>
+                  <button id="tgl-gate" class="switch" type="button" role="switch" aria-checked="false"></button>
+                </div>
+                <label id="row-send" class="slider-row" hidden><span>このトラックの響きの量</span><input id="rng-send" class="range" type="range" min="0" max="200" step="5"><b id="txt-send" class="mono"></b></label>
+                <p class="faint mt10">素の WAV には触りません。切れば1サンプルも違わず元に戻ります。</p>
+              </div>
+
+              <button id="btn-edit-track" class="btn btn-top full mt10" type="button">波形を見て直す</button>
+              <button id="btn-remove-track" class="btn btn-top full mt8 dim" type="button">このトラックを外す</button>
+            </div>
+          </div>
+          <button id="btn-export-2" class="btn btn-accent full tall" type="button">1つの音にまとめて書き出す</button>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <!-- 報せの帯 -->
+  <div id="notice" class="notice" hidden>
+    <i id="notice-dot" class="dot gold"></i>
+    <span id="txt-notice"></span>
+    <button id="btn-notice-action" class="btn btn-small" type="button" hidden></button>
+    <button id="btn-notice-close" class="btn btn-small ghosty" type="button">✕</button>
+  </div>
+</div>
+
+
+<!-- ================= 詳しい設定 ================= -->
+<dialog id="dlg-settings" class="dlg wide">
+  <header class="dlg-head">
+    <div>
+      <b>詳しい設定</b><span class="dim small ml12">分からなければ触らなくて大丈夫です</span>
+    </div>
+    <button class="btn btn-top" type="button" data-close>閉じる</button>
+  </header>
+  <div class="dlg-body two-col">
+    <div class="col-main">
+
+      <div class="sec-head">
+        <div><b>音の入り口</b><span class="mono faint ml8">input</span></div>
+        <button id="btn-rescan" class="btn btn-top" type="button">機器を探し直す</button>
+      </div>
+      <div class="gold-rule"></div>
+      <div id="device-list"></div>
+      <p id="txt-no-device" class="sub" hidden>使える機器が見つかりませんでした。マイクを挿してから「機器を探し直す」を押してください。</p>
+
+      <div class="sec mt18">
+        <div class="sec-head"><div><b>ブラウザの加工</b><span class="mono faint ml8">constraints</span></div></div>
+        <div class="gold-rule"></div>
+        <p class="sub">ブラウザは既定で入力に手を入れます。ここを全て「切」にしないと、録れるのは「実際に鳴っている音」ではありません。</p>
+        <div id="proc-chips" class="chips mt10"></div>
+        <p id="txt-proc-actual" class="faint mt8"></p>
+      </div>
+
+      <div class="sec mt18">
+        <div class="sec-head"><div><b>音の通り道</b><span class="mono faint ml8">capture path</span></div></div>
+        <div class="gold-rule"></div>
+        <div class="card">
+          <div class="switch-row">
+            <span>生フレーム取得（AudioContext を通さず、機器のレートのまま受ける）</span>
+            <button id="tgl-raw" class="switch" type="button" role="switch" aria-checked="true"></button>
+          </div>
+          <p id="txt-raw-note" class="faint mt8"></p>
+        </div>
+        <p class="sub mt10"><b>Windows 側で決まること：</b>ブラウザは Windows のミキサーを通ります。「サウンド設定 → 録音 → 機器のプロパティ → 詳細 → 既定の形式」が 16bit のままだと、24bit の機材でも 16bit しか届きません。<b>24bit・機器と同じレート</b>にして、「オーディオ拡張機能」を切ってください。届いているビット数は「音のチェック → 静かにして測る」で分かります。</p>
+      </div>
+
+      <div class="sec mt18">
+        <div class="sec-head"><div><b>チャンネル数</b><span class="faint small ml8">頼む数。実際は機器しだい</span></div></div>
+        <div class="gold-rule"></div>
+        <div id="channel-chips" class="chips"></div>
+        <p class="faint mt8">Chrome は何も言わないとモノラルに畳みます。2本のマイクや、ステレオ出力の機材は「2」に。</p>
+      </div>
+
+      <div class="sec mt18">
+        <div class="sec-head"><div><b>録るチャンネル</b><span class="faint small ml8">多入力の機材のとき</span></div></div>
+        <div class="gold-rule"></div>
+        <div id="record-channel-chips" class="chips"></div>
+        <p class="faint mt8">機器から届いている入力のうち、どれを録るか。メーターと「音のチェック」は全部を見ます。</p>
+        <div id="record-mode-chips" class="chips mt10"></div>
+        <p id="txt-record-mode-note" class="sub mt8"></p>
+      </div>
+
+      <div class="sec mt18">
+        <div class="sec-head"><div><b>押す前の音も残す</b><span class="mono faint ml8">pre-roll</span></div></div>
+        <div class="gold-rule"></div>
+        <div id="preroll-chips" class="chips"></div>
+        <p class="faint mt8">録音していない間も直近の音を持っておき、押した瞬間にその前の数秒を先頭に付けます。「いい演奏が始まってから押した」を救います。重ねて録るときは、前の音と揃える必要があるので付けません。</p>
+      </div>
+
+      <div class="sec mt18">
+        <div class="sec-head"><div><b>自分のフォルダにも書く</b><span class="mono faint ml8">mirror</span></div></div>
+        <div class="gold-rule"></div>
+        <div class="card">
+          <p id="txt-mirror-state" class="sub"></p>
+          <div class="row mt10">
+            <button id="btn-mirror-choose" class="btn btn-top" type="button">フォルダを選ぶ</button>
+            <button id="btn-mirror-clear" class="btn btn-top dim ml8" type="button" hidden>やめる</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec mt18">
+        <div class="sec-head"><div><b>音の細かさ</b><span id="txt-format-original" class="mono faint ml8"></span></div></div>
+        <div class="gold-rule"></div>
+        <div id="format-chips" class="chips"></div>
+        <p class="faint mt8">ブラウザは機器の生のフォーマットを選べません。ここで選んだ値を機器に頼み、実際に届いた値を下に出します。生フレーム取得のときは、届いた値がそのまま録音のレートになります。</p>
+      </div>
+
+      <div class="sec mt18">
+        <div class="sec-head"><div><b>音の残し方</b><span class="faint small ml8">保存するファイルの形</span></div></div>
+        <div class="gold-rule"></div>
+        <div id="save-chips" class="chips"></div>
+      </div>
+
+      <div class="sec mt18">
+        <div class="sec-head"><div><b>重ね録りのとき、前の音を鳴らす機器</b></div></div>
+        <div class="gold-rule"></div>
+        <select id="cmb-output" class="select full"></select>
+        <p id="txt-output-note" class="sub mt8"></p>
+      </div>
+
+      <div class="sec mt18">
+        <div class="sec-head"><div><b>重ね録りのズレ合わせ</b><span class="mono faint ml8">latency</span></div></div>
+        <div class="gold-rule"></div>
+        <div class="card">
+          <div class="row">
+            <span id="txt-latency-value" class="latency-value">未測定</span>
+            <button id="btn-measure" class="btn btn-top ml14" type="button">測る</button>
+          </div>
+          <p id="txt-latency-note" class="sub mt8">測っておくと、重ねて録った音が前の音とぴったり揃います。</p>
+          <div class="switch-row mt8">
+            <span>音の入り口を開いたときに自動で測る</span>
+            <button id="tgl-auto-latency" class="switch" type="button" role="switch" aria-checked="true"></button>
+          </div>
+          <div class="switch-row">
+            <span>クロックのずれを、重ね録りのとき再生側で相殺する</span>
+            <button id="tgl-drift" class="switch" type="button" role="switch" aria-checked="true"></button>
+          </div>
+          <p id="txt-drift" class="faint mt8"></p>
+        </div>
+      </div>
+
+      <div class="sec mt18">
+        <div class="sec-head"><div><b>マイクの較正ファイル</b><span class="mono faint ml8">calibration</span></div></div>
+        <div class="gold-rule"></div>
+        <div class="card">
+          <p id="txt-miccal-state" class="sub">測定用マイク（UMIK-1 など）に付いてくる「周波数 dB」のテキストを読み込むと、周波数分布からマイクの色を引いて本当の分布を見られます。仕上げの「マイク補正（戻し）」にも使えます。</p>
+          <div class="row mt10">
+            <label class="btn btn-top" for="file-miccal">ファイルを選ぶ</label>
+            <input id="file-miccal" type="file" accept=".txt,.cal,.frd,.csv,text/plain" hidden>
+            <button id="btn-miccal-clear" class="btn btn-top dim ml8" type="button" hidden>外す</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec mt18">
+        <div class="sec-head"><div><b>起動のしかた</b></div></div>
+        <div class="gold-rule"></div>
+        <div class="card">
+          <div class="switch-row">
+            <span>開いたらすぐマイクを使う</span>
+            <button id="tgl-startup" class="switch" type="button" role="switch" aria-checked="true"></button>
+          </div>
+          <p class="faint mt8">切ると、開いても音の大きさの目盛りは動きません。他のアプリとマイクを取り合いたくないときに。</p>
+        </div>
+      </div>
+
+      <div class="sec mt18">
+        <div class="sec-head"><div><b>録った音の置き場所</b></div></div>
+        <div class="gold-rule"></div>
+        <div class="sunken-box"><span id="txt-folder" class="mono dim"></span></div>
+      </div>
+    </div>
+
+    <aside class="col-side">
+      <h3 class="sec-title">この選択が意味すること</h3>
+      <div class="gold-rule"></div>
+      <p id="txt-explain" class="sub"></p>
+      <div class="side-foot">
+        <button id="btn-open-input" class="btn btn-top full" type="button">音を聞く準備をする</button>
+      </div>
+    </aside>
+  </div>
+</dialog>
+
+
+<!-- ================= 音のチェック ================= -->
+<dialog id="dlg-diag" class="dlg tall">
+  <header class="dlg-head">
+    <div><b>音のチェック</b><p id="diag-target" class="sub mt4">まだ測っていません</p></div>
+    <button class="btn btn-top" type="button" data-close>閉じる</button>
+  </header>
+  <div class="dlg-body">
+    <div class="chips">
+      <button id="btn-silence" class="btn btn-ghost" type="button" title="まわりの静けさ（暗騒音）と電源のブーン音を調べます">静かにして測る（5秒）</button>
+      <button id="btn-playing" class="btn btn-ghost" type="button" title="実際に演奏している間の音を調べます">弾きながら測る（5秒）</button>
+      <button id="btn-processing" class="btn btn-ghost" type="button" title="静かな間だけ入力が絞られていないかを、音を鳴らして確かめます">ブラウザが加工していないか調べる</button>
+      <button id="btn-verify-path" class="btn btn-ghost" type="button" title="生フレーム取得の道と AudioContext の道で同時に録って比べます。一致すれば、ブラウザが途中で何も掛けていない証明です">経路を検証する（2秒）</button>
+    </div>
+    <div class="row mt8">
+      <button id="btn-open-measure" class="btn btn-ghost" type="button" title="スイープを鳴らして測る。ケーブルで繋げば機材の往復特性、スピーカーで鳴らせば部屋とマイク位置">スイープで測る（機材・部屋）</button>
+      <button id="btn-open-compare" class="btn btn-ghost ml8" type="button" title="マイクの置き方を変えて短く録り、数字で見比べる">マイク位置を録り比べる</button>
+    </div>
+    <div class="row mt8">
+      <button id="btn-diag-track" class="btn btn-ghost" type="button">録った音を調べる</button>
+      <select id="cmb-diag-track" class="select ml8"></select>
+    </div>
+
+    <div id="card-verdict" class="card mt12">
+      <div class="verdict-head">
+        <i id="verdict-mark" class="verdict-mark">?</i>
+        <b id="txt-verdict-title">まず「静かにして測る」を押してください</b>
+      </div>
+      <p id="txt-verdict-body" class="sub mt10">録れている音の素性を数字で出します。耳では分かりにくい雑音や電源のブーン音は、録ってしまうと後から取り除きにくいので、録る前に確かめます。</p>
+      <div id="pnl-diag-steps" class="mt12"></div>
+    </div>
+
+    <div id="stats-grid" class="stats mt12"></div>
+
+    <div id="card-history" class="card mt12" hidden>
+      <b class="card-title">これまでに測ったもの</b>
+      <div class="gold-rule"></div>
+      <div id="history-list"></div>
+      <p class="faint mt8">機材や置き場所を変えたあと、前より良くなったかを見比べるために残しています。</p>
+    </div>
+
+    <div id="card-spectrum" class="card mt12" hidden>
+      <b class="card-title">どの高さの音が入っているか</b>
+      <p class="faint">周波数分布（1/3オクターブ）</p>
+      <canvas id="spectrum" class="spectrum" height="74"></canvas>
+      <div class="spec-labels mono">
+        <span>低い音 25Hz</span><span>1kHz</span><span>高い音 20kHz</span>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+
+<!-- ================= スイープで測る ================= -->
+<dialog id="dlg-measure" class="dlg tall">
+  <header class="dlg-head">
+    <div><b>スイープで測る</b><p class="sub mt4">対数スイープを鳴らして録り、インパルス応答から素性を出します</p></div>
+    <button class="btn btn-top" type="button" data-close>閉じる</button>
+  </header>
+  <div class="dlg-body">
+    <div class="chips" id="measure-mode-chips">
+      <button class="chip on" data-mode="loopback" type="button"><b>ループバック</b><small>ケーブルで出力→入力</small></button>
+      <button class="chip" data-mode="room" type="button"><b>部屋とマイク</b><small>スピーカー→マイク</small></button>
+    </div>
+    <p id="txt-measure-howto" class="sub mt10"></p>
+    <div class="row mt10">
+      <button id="btn-measure-sweep" class="btn btn-accent" type="button">スイープで測る（5秒）</button>
+      <button id="btn-measure-tone" class="btn btn-ghost ml8" type="button">1 kHz で THD+N を測る（3秒）</button>
+    </div>
+    <div id="card-measure" class="card mt12" hidden>
+      <b id="txt-measure-title" class="card-title"></b>
+      <div id="pnl-measure-notes"></div>
+    </div>
+    <div id="card-response" class="card mt12" hidden>
+      <b class="card-title">周波数特性（1 kHz を 0 dB に）</b>
+      <canvas id="response-canvas" class="spectrum" height="120"></canvas>
+      <div class="spec-labels mono"><span>20 Hz</span><span>1 kHz</span><span>20 kHz</span></div>
+    </div>
+    <div id="card-rt60" class="card mt12" hidden>
+      <b class="card-title">響きの長さ（RT60）と初期反射</b>
+      <div id="stats-rt60" class="stats"></div>
+      <canvas id="ir-canvas" class="spectrum mt10" height="90"></canvas>
+      <div class="spec-labels mono"><span>0 ms</span><span>直接音からの時間</span><span>50 ms</span></div>
+    </div>
+  </div>
+</dialog>
+
+
+<!-- ================= マイク位置を録り比べる ================= -->
+<dialog id="dlg-compare" class="dlg tall">
+  <header class="dlg-head">
+    <div><b>マイク位置を録り比べる</b><p class="sub mt4">置き方を変えて同じフレーズを 5 秒ずつ録り、数字で見比べます。音は残しません</p></div>
+    <button class="btn btn-top" type="button" data-close>閉じる</button>
+  </header>
+  <div class="dlg-body">
+    <div class="row">
+      <button class="btn btn-ghost cmp-rec" data-slot="0" type="button">A を録る（5秒）</button>
+      <button class="btn btn-ghost cmp-rec ml8" data-slot="1" type="button">B を録る（5秒）</button>
+      <button class="btn btn-ghost cmp-rec ml8" data-slot="2" type="button">C を録る（5秒）</button>
+      <span class="spacer"></span>
+      <button id="btn-cmp-clear" class="btn btn-small ghosty" type="button">消す</button>
+    </div>
+    <p class="faint mt8">同じ強さで同じフレーズを。位置の違いだけを見るためです。</p>
+    <div id="card-compare" class="card mt12" hidden>
+      <table id="tbl-compare" class="cmp-table"></table>
+      <canvas id="compare-canvas" class="spectrum mt10" height="110"></canvas>
+      <div class="spec-labels mono"><span>低い音 25Hz</span><span>1kHz</span><span>高い音 20kHz</span></div>
+      <p id="txt-compare-note" class="sub mt8"></p>
+    </div>
+  </div>
+</dialog>
+
+
+<!-- ================= 書き出す ================= -->
+<dialog id="dlg-export" class="dlg narrow">
+  <header class="dlg-head">
+    <div><b>1つの音にまとめて書き出す</b><p id="txt-export-summary" class="sub mt4"></p></div>
+  </header>
+  <div class="dlg-body">
+    <div id="card-wav" class="pick-card is-picked">
+      <div class="pick-body">
+        <b>そのままの音で残す</b>
+        <p class="sub">いちばん劣化しない形。あとで編集するならこれ。</p>
+        <p id="txt-wav-meta" class="mono faint"></p>
+      </div>
+      <span class="tag">おすすめ</span>
+    </div>
+    <div id="card-24" class="pick-card mt10">
+      <div class="pick-body">
+        <b>容量を小さくして残す</b>
+        <p class="sub">24bit で書き出します。24bit で録った音は完全に無劣化です。</p>
+        <p id="txt-24-meta" class="mono faint"></p>
+      </div>
+    </div>
+    <div id="card-flac" class="pick-card mt10">
+      <div class="pick-body">
+        <b>FLAC で残す（24bit 可逆）</b>
+        <p class="sub">24bit の値を1つも変えずに、容量をおよそ 6〜7 割に。</p>
+        <p id="txt-flac-meta" class="mono faint"></p>
+      </div>
+    </div>
+
+    <div class="sec mt14">
+      <div class="sec-head"><div><b>何を書き出すか</b></div></div>
+      <div class="gold-rule"></div>
+      <label class="check-row"><input id="chk-exp-pure" type="checkbox" checked disabled><span><b>素</b>　加工ゼロ。必ず書き出します</span></label>
+      <label class="check-row"><input id="chk-exp-finished" type="checkbox"><span><b>仕上げ</b>　<span id="txt-exp-finished-note">盛りが入っているときだけ</span></span></label>
+    </div>
+
+    <div class="sunken-card mt14">
+      <div class="row">
+        <i id="clip-dot" class="dot"></i>
+        <span id="txt-clip" class="ml8 small">いちばん大きいところを調べています…</span>
+      </div>
+      <div class="peak-well mt10">
+        <div id="peak-danger" class="peak-danger"></div>
+        <div id="peak-fill" class="meter-level"></div>
+      </div>
+      <p id="txt-peak" class="mono small mt8"></p>
+    </div>
+  </div>
+  <footer class="dlg-foot">
+    <button class="btn btn-top dim" type="button" data-close>やめる</button>
+    <button id="btn-do-export" class="btn btn-accent ml10" type="button">書き出す</button>
+  </footer>
+</dialog>
+
+
+<!-- ================= 波形を見て直す ================= -->
+<dialog id="dlg-editor" class="dlg wide tall">
+  <header class="dlg-head">
+    <div><b>波形を見て直す</b><p id="txt-editor-target" class="sub mt4"></p></div>
+    <button class="btn btn-top" type="button" data-close>閉じる</button>
+  </header>
+  <div class="dlg-body">
+    <div class="editor-toolbar">
+      <span class="dim small">横の拡大</span>
+      <input id="zoom-x" class="range" type="range" min="1" max="60" step="0.5" value="1">
+      <span class="dim small ml12">縦の拡大</span>
+      <input id="zoom-y" class="range" type="range" min="1" max="8" step="0.1" value="1">
+      <label class="check ml12"><input id="chk-auto-y" type="checkbox" checked><span>自動</span></label>
+      <span class="spacer"></span>
+      <button id="btn-ed-play" class="btn btn-small" type="button">▶ 選んだところを聞く</button>
+      <button id="btn-ed-stop" class="btn btn-small ml8" type="button">■</button>
+    </div>
+
+    <div class="editor-canvas-frame">
+      <canvas id="editor-wave"></canvas>
+    </div>
+    <div class="editor-scrollbar"><input id="ed-scroll" class="range full" type="range" min="0" max="1" step="0.0005" value="0"></div>
+
+    <div class="editor-foot">
+      <span id="txt-editor-sel" class="mono small"></span>
+      <span class="spacer"></span>
+      <button id="btn-ed-crop" class="btn btn-small" type="button">選んだところを切り出す</button>
+      <button id="btn-ed-punch" class="btn btn-small is-rec ml8" type="button">ここだけ録り直す</button>
+    </div>
+    <p class="faint mt8">どちらも元の録音は書き換えず、新しい録りとして増えます。波形は音の大きさ（dB）の目盛りで描いています。</p>
+  </div>
+</dialog>
+
+
+<!-- ================= 録音一覧 ================= -->
+<dialog id="dlg-sessions" class="dlg">
+  <header class="dlg-head">
+    <div><b>録音一覧</b><p id="txt-sessions-total" class="sub mt4">名前・トラック数・長さ・容量・日時で選びます</p></div>
+    <button class="btn btn-top" type="button" data-close>閉じる</button>
+  </header>
+  <div class="dlg-body">
+    <div id="session-list" class="session-list"></div>
+    <div class="dlg-foot mt12">
+      <button id="btn-sessions-delete" class="btn btn-top dim" type="button" disabled>選んだものを消す</button>
+      <span class="spacer"></span>
+      <button id="btn-sessions-import" class="btn btn-top" type="button">読み込む</button>
+      <button id="btn-sessions-new" class="btn btn-accent ml10" type="button">新しく始める</button>
+    </div>
+  </div>
+</dialog>
+
+
+<!-- ================= 汎用の問い（確認・注意） ================= -->
+<dialog id="dlg-ask" class="dlg narrow">
+  <header class="dlg-head"><div><b id="ask-title">Tonmeister</b></div></header>
+  <div class="dlg-body"><p id="ask-body" class="ask-body"></p></div>
+  <footer class="dlg-foot">
+    <button id="ask-cancel" class="btn btn-top dim" type="button">やめる</button>
+    <button id="ask-ok" class="btn btn-accent ml10" type="button">続ける</button>
+  </footer>
+</dialog>
+
+
+<!-- 最初のタップ：スマホや iOS では操作なしに音の入り口を開けない -->
+<div id="tap-start" class="tap-start" hidden>
+  <div>
+    <button id="btn-tap-start" type="button">タップして始める</button>
+    <p>マイクを使う許可と、音の準備をします。</p>
+  </div>
+</div>
+
+<!-- ================= 進み具合 ================= -->
+<div id="busy" class="busy" hidden><div class="busy-card"><span id="busy-text">しばらくお待ちください…</span></div></div>
+
+
+<!-- トラック1行分の型 -->
+<template id="tpl-lane">
+  <div class="lane">
+    <div class="lane-head">
+      <span class="lane-name" title="クリックすると名前を変えられます"></span>
+      <b class="lane-finish badge-finish" hidden title="このトラックに仕上げが入っています">盛り</b>
+      <input class="lane-name-edit" hidden>
+      <div class="lane-controls">
+        <button class="mini mute" type="button" title="このトラックだけ鳴らさない">消音</button>
+        <button class="mini solo" type="button" title="このトラックだけ鳴らす">単独</button>
+        <button class="mini vol mono" type="button" title="クリックすると音量を変えられます">0.0dB</button>
+      </div>
+      <div class="vol-popup" hidden>
+        <span class="dim small">このトラックの音量</span>
+        <input class="range vol-range" type="range" min="0" max="2" step="0.01" value="1">
+      </div>
+    </div>
+    <div class="lane-body">
+      <div class="wave-frame"><canvas class="lane-wave"></canvas></div>
+      <div class="lane-foot">
+        <div class="takes">
+          <span class="dim small">聞かせる録り：</span>
+          <span class="take-pills"></span>
+          <span class="faint small">どれも消えません</span>
+        </div>
+        <div class="sel-actions" hidden>
+          <button class="btn btn-small is-rec punch" type="button">ここだけ録り直す</button>
+          <button class="btn btn-small crop ml8" type="button">選んだところを切り出す</button>
+          <span class="faint small ml8">元の音は残ります</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

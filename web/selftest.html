@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tonmeister — 自己検証</title>
+<link rel="stylesheet" href="css/theme.css">
+<style>
+  body{overflow:auto}
+  .sheet{max-width:900px;margin:0 auto;padding:0 24px 64px}
+  .head{margin:40px 0 0;padding:22px 24px;background:var(--panel);
+        border:1px solid var(--brass-deep);text-align:center;position:relative}
+  .head h1{font-family:var(--plate);font-size:20px;letter-spacing:.4em;text-indent:.4em;
+           color:var(--good);font-weight:400;margin:0}
+  .head hr{border:0;height:1px;background:var(--brass-deep);width:60%;margin:14px auto 10px;opacity:.9}
+  .head p{margin:0;font-size:12px;color:var(--fg-faint);letter-spacing:.6em;text-indent:.6em}
+  .dbl{height:4px;margin:28px 0 26px;background:var(--double-rule)}
+  h2{font-size:16px;font-weight:400;color:var(--good);margin:34px 0 0;
+     padding-bottom:8px;border-bottom:1px solid var(--brass-deep)}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}
+  th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  thead th{color:var(--good);font-size:11px;letter-spacing:.14em;font-weight:400;
+           border-bottom:1px solid var(--brass-deep)}
+  td.v{font-family:var(--mono);white-space:nowrap;color:var(--fg-dim)}
+  td.r{font-family:var(--mono);white-space:nowrap;font-weight:bold}
+  td.r.ok{color:var(--good)} td.r.ng{color:var(--rec-bright)}
+  .summary{margin-top:26px;padding:16px 20px;background:var(--plate-fill);
+           border:2px solid var(--strong-line);font-size:15px}
+  .summary.ng{border-color:var(--rec-bright)}
+  .runbar{display:flex;gap:10px;align-items:center;margin-top:20px}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <header class="head">
+    <h1>SELBSTPRÜFUNG</h1>
+    <hr>
+    <p>自 己 検 証</p>
+  </header>
+  <div class="dbl"></div>
+
+  <p class="sub">
+    デスクトップ版の <span class="mono">--selftest / --atest / --etest</span> にあたるもの。
+    変換の無劣化・解析の数値校正・編集と後処理を、既知の合成信号で確かめる。
+    マイクは使わないので、機器がなくても走る。
+  </p>
+
+  <div class="runbar">
+    <button id="run" class="btn btn-accent tall" type="button">検証する</button>
+    <span id="progress" class="faint"></span>
+  </div>
+
+  <div id="results"></div>
+  <div id="summary" class="summary" hidden></div>
+</div>
+<script type="module" src="js/selftest.js"></script>
+</body>
+</html>

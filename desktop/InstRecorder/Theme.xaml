@@ -1,0 +1,824 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+      黒漆に金。19世紀ドイツの譜面や楽器の箔押しから借りている。
+
+      色は3つしか使わない。
+        金   … 正しい・選ばれている・良好
+        深紅 … 録音・危険
+        象牙 … 文字
+      発光は使わない。余白と細い金の罫で格を出す。
+    -->
+
+    <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+    <!-- ============ 色 ============ -->
+    <!-- 面（木地） -->
+    <SolidColorBrush x:Key="Bg" Color="#0C0B09"/>
+    <SolidColorBrush x:Key="Panel" Color="#1A1713"/>
+    <SolidColorBrush x:Key="Sunken" Color="#141210"/>
+    <SolidColorBrush x:Key="Deep" Color="#060605"/>
+    <SolidColorBrush x:Key="Lane" Color="#171410"/>
+    <SolidColorBrush x:Key="BtnFace" Color="#272118"/>
+    <SolidColorBrush x:Key="BtnHover" Color="#372F21"/>
+    <SolidColorBrush x:Key="MiniFace" Color="#211C15"/>
+
+    <!-- 罫 -->
+    <SolidColorBrush x:Key="Line" Color="#4A4130"/>
+    <SolidColorBrush x:Key="WaveLine" Color="#5A4E33"/>
+    <SolidColorBrush x:Key="StrongLine" Color="#9C7D24"/>
+
+    <!-- 文字（象牙） -->
+    <SolidColorBrush x:Key="Fg" Color="#EDE6D6"/>
+    <SolidColorBrush x:Key="FgDim" Color="#C8BDA2"/>
+    <SolidColorBrush x:Key="FgFaint" Color="#9E937A"/>
+    <!-- 金・象牙の上に載せる文字 -->
+    <SolidColorBrush x:Key="Ink" Color="#0C0B09"/>
+
+    <!-- 意味を持つ色。金＝正しい、深紅＝録音と危険、その間に赤銅の注意。 -->
+    <SolidColorBrush x:Key="Rec" Color="#7E2A22"/>
+    <SolidColorBrush x:Key="RecBright" Color="#A03A2E"/>
+    <!-- 金。良好・選択中・強調は同じ色にする（どれも「これでよい」の意） -->
+    <SolidColorBrush x:Key="Good" Color="#C9A227"/>
+    <SolidColorBrush x:Key="Info" Color="#C9A227"/>
+    <SolidColorBrush x:Key="BrassDeep" Color="#8A6E1E"/>
+    <SolidColorBrush x:Key="Warn" Color="#CE8433"/>
+    <SolidColorBrush x:Key="MuteOn" Color="#6E3218"/>
+    <SolidColorBrush x:Key="Sel" Color="#E3C766"/>
+    <SolidColorBrush x:Key="SelFill" Color="#2EE3C766"/>
+
+    <!--
+      ベルリン藍（プルシアンブルー）。18世紀のベルリンで作られた顔料で、
+      19世紀の製図・銘板・紙幣に広く使われた。
+      金とぶつからない第二の色として、「音のこの区間を選んでいる」に充てる。
+    -->
+    <SolidColorBrush x:Key="Prussian" Color="#22406B"/>
+    <SolidColorBrush x:Key="PrussianLight" Color="#4E7CB5"/>
+
+    <!--
+      太細罫。19世紀の扉ページで使われた、太い罫の下に間を置いて細い罫を添える組み方。
+      BorderThickness="0,0,0,4" で使う。
+    -->
+    <LinearGradientBrush x:Key="DoubleRule" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="0" Color="#B08D2A"/>
+        <GradientStop Offset="0.5" Color="#B08D2A"/>
+        <GradientStop Offset="0.5" Color="#0C0B09"/>
+        <GradientStop Offset="0.75" Color="#0C0B09"/>
+        <GradientStop Offset="0.75" Color="#6E5617"/>
+        <GradientStop Offset="1" Color="#6E5617"/>
+    </LinearGradientBrush>
+
+    <!-- 警告の札（古い注意書きの紙） -->
+    <SolidColorBrush x:Key="WarnCardLine" Color="#6B4E1C"/>
+    <SolidColorBrush x:Key="WarnCardFg" Color="#E0CFA6"/>
+    <LinearGradientBrush x:Key="WarnCardBg" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="0" Color="#1E170D"/>
+        <GradientStop Offset="1" Color="#131009"/>
+    </LinearGradientBrush>
+
+    <!-- 異常なしの札 -->
+    <SolidColorBrush x:Key="OkCardLine" Color="#6B5518"/>
+    <LinearGradientBrush x:Key="OkCardBg" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="0" Color="#1A1709"/>
+        <GradientStop Offset="1" Color="#121009"/>
+    </LinearGradientBrush>
+
+    <!-- 録音中の帯 -->
+    <SolidColorBrush x:Key="RecBarBg" Color="#1E100D"/>
+    <SolidColorBrush x:Key="RecBarLine" Color="#5A231C"/>
+    <SolidColorBrush x:Key="RecBarFg" Color="#C97A6E"/>
+    <SolidColorBrush x:Key="RecBarSub" Color="#B39A90"/>
+    <SolidColorBrush x:Key="RecBarDim" Color="#91786F"/>
+
+    <!-- 画面の下地。黒漆の蓋のように、上に薄い照りを残して下へ落とす。 -->
+    <LinearGradientBrush x:Key="StageBg" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="0" Color="#141210"/>
+        <GradientStop Offset="0.55" Color="#0C0B09"/>
+        <GradientStop Offset="1" Color="#080706"/>
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="StageRecBg" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="0" Color="#1B120F"/>
+        <GradientStop Offset="0.55" Color="#0C0B09"/>
+        <GradientStop Offset="1" Color="#080706"/>
+    </LinearGradientBrush>
+
+    <!-- 録音ボタンの面。漆のように、上から光が当たったむらを付ける。 -->
+    <RadialGradientBrush x:Key="RecLacquer" Center="0.4,0.3" GradientOrigin="0.4,0.3"
+                         RadiusX="0.78" RadiusY="0.78">
+        <GradientStop Offset="0" Color="#93342A"/>
+        <GradientStop Offset="1" Color="#65201A"/>
+    </RadialGradientBrush>
+
+    <!-- 削り出した板の面。上をわずかに明るくして、厚みを出す。 -->
+    <LinearGradientBrush x:Key="PlateFill" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="0" Color="#231E17"/>
+        <GradientStop Offset="1" Color="#151210"/>
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="ButtonFill" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="0" Color="#2F281C"/>
+        <GradientStop Offset="1" Color="#201B15"/>
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="ButtonFillHover" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Offset="0" Color="#403725"/>
+        <GradientStop Offset="1" Color="#2C2519"/>
+    </LinearGradientBrush>
+
+    <!-- 目盛りの塗り（鈍い金から金へ） -->
+    <LinearGradientBrush x:Key="LevelFill" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Offset="0" Color="#7A6119"/>
+        <GradientStop Offset="1" Color="#C9A227"/>
+    </LinearGradientBrush>
+
+    <!-- ============ 文字 ============ -->
+
+    <!--
+      色・書体・大きさの既定はここで指定しない。各 Window に置いて継承させる。
+      暗黙スタイルにすると、ボタンの中身が文字列のときに ContentPresenter が作る
+      TextBlock にもこれが効いてしまい、ボタン側で指定した色や大きさが無視される
+      （金のボタンに象牙の文字、など）。継承なら、その指定が素直に効く。
+
+      本文は游ゴシック。ドイツの機械や標識の字は明朝ではなく、線の太さの揃った
+      サンセリフ（DIN の系譜）で、読みやすさと工作物らしさが同時に立つ。
+      明朝は題字（銘板）だけに残す。数値は Consolas で、計器の読み取り窓に見立てる。
+    -->
+    <Style TargetType="TextBlock">
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="Label" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource FgDim}"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Margin" Value="0,0,0,4"/>
+    </Style>
+
+    <!-- 銘板の字。題字と、窓の見出しだけに使う。 -->
+    <Style x:Key="PlateTitle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Palatino Linotype, Yu Mincho, MS PMincho"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="Foreground" Value="{StaticResource Fg}"/>
+    </Style>
+
+    <!-- 補足（副） -->
+    <Style x:Key="Sub" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource FgDim}"/>
+        <Setter Property="FontSize" Value="12.5"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+
+    <!-- 原語や注釈（最も薄い） -->
+    <Style x:Key="Faint" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource FgFaint}"/>
+        <Setter Property="FontSize" Value="11.5"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+
+    <Style x:Key="Mono" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource Fg}"/>
+        <Setter Property="FontFamily" Value="Consolas"/>
+        <Setter Property="FontSize" Value="12.5"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- ============ 入力欄 ============ -->
+
+    <Style TargetType="TextBox">
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Foreground" Value="{StaticResource Fg}"/>
+        <Setter Property="CaretBrush" Value="{StaticResource Fg}"/>
+        <Setter Property="Background" Value="{StaticResource Deep}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource Line}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="6,4"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+    </Style>
+
+    <!-- ============ ボタン ============ -->
+    <!-- 金の箔押しの小札。角はほとんど落とさず、面取りの代わりに細い罫で縁取る。 -->
+
+    <!--
+      キーボードで辿っているときの居場所。既定の点線は黒地でほとんど見えないので、
+      金の細い枠に置き換える。
+    -->
+    <Style x:Key="GoldFocus">
+        <Setter Property="Control.Template">
+            <Setter.Value>
+                <ControlTemplate>
+                    <Rectangle Margin="-2" RadiusX="2" RadiusY="2" Fill="Transparent"
+                               Stroke="{StaticResource Sel}" StrokeThickness="1"
+                               StrokeDashArray="2 2" SnapsToDevicePixels="True"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="Button">
+        <Setter Property="FocusVisualStyle" Value="{StaticResource GoldFocus}"/>
+        <Setter Property="FontSize" Value="13.5"/>
+        <Setter Property="Height" Value="34"/>
+        <Setter Property="Padding" Value="16,0"/>
+        <Setter Property="Background" Value="{StaticResource ButtonFill}"/>
+        <Setter Property="Foreground" Value="{StaticResource Fg}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource Line}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="bd" CornerRadius="2" Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                        <Grid>
+                            <!-- 面取りの照り。上の縁だけ一段明るくして厚みを出す。 -->
+                            <Rectangle Height="1" VerticalAlignment="Top" Fill="#3E3524" Opacity="0.9"/>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}"
+                                              TextElement.Foreground="{TemplateBinding Foreground}"/>
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource ButtonFillHover}"/>
+                            <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource StrongLine}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="bd" Property="Opacity" Value="0.4"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- タブ（下線は外側の Rectangle で描く） -->
+    <Style x:Key="TabButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="Height" Value="44"/>
+        <Setter Property="Padding" Value="18,0"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="bd" Background="{TemplateBinding Background}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          Margin="{TemplateBinding Padding}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="#1A1712"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- 帯の右側に並ぶ小さな札 -->
+    <Style x:Key="TopBarButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="Height" Value="30"/>
+        <Setter Property="FontSize" Value="12.5"/>
+        <Setter Property="Padding" Value="13,0"/>
+    </Style>
+
+    <!-- 前に進む操作（書き出す など） -->
+    <Style x:Key="AccentButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="Height" Value="30"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Padding" Value="13,0"/>
+        <Setter Property="Background" Value="{StaticResource Good}"/>
+        <Setter Property="Foreground" Value="{StaticResource Ink}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource StrongLine}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="bd" CornerRadius="2" Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          Margin="{TemplateBinding Padding}"
+                                          TextElement.Foreground="{TemplateBinding Foreground}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="#DDB539"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="bd" Property="Opacity" Value="0.4"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- 補助の札 -->
+    <Style x:Key="GhostButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="Height" Value="38"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Padding" Value="18,0"/>
+    </Style>
+
+    <!-- 破線の札（＋ この上に重ねて録る） -->
+    <Style x:Key="DashedButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="Height" Value="30"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Padding" Value="13,0"/>
+        <Setter Property="Foreground" Value="{StaticResource FgDim}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid x:Name="root">
+                        <Border x:Name="bd" CornerRadius="2" Background="{TemplateBinding Background}"/>
+                        <Rectangle RadiusX="2" RadiusY="2" Stroke="{StaticResource Line}"
+                                   StrokeThickness="1" StrokeDashArray="4 3" Fill="Transparent"/>
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          Margin="{TemplateBinding Padding}"
+                                          TextElement.Foreground="{TemplateBinding Foreground}"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="#1A1712"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="root" Property="Opacity" Value="0.4"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- 運搬（再生・停止）の押しボタン -->
+    <Style x:Key="TransportButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="Width" Value="40"/>
+        <Setter Property="Height" Value="38"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="bd" CornerRadius="3" Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          TextElement.Foreground="{TemplateBinding Foreground}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource BtnHover}"/>
+                            <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource StrongLine}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="bd" Property="Opacity" Value="0.4"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- 録音（四角い方）。金の縁に深紅の面。 -->
+    <Style x:Key="RecordButton" TargetType="Button" BasedOn="{StaticResource TransportButton}">
+        <Setter Property="Width" Value="44"/>
+        <Setter Property="Background" Value="{StaticResource Rec}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource Info}"/>
+    </Style>
+
+    <!-- 止める（象牙の大札） -->
+    <Style x:Key="StopBigButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="Width" Value="190"/>
+        <Setter Property="Height" Value="56"/>
+        <Setter Property="FontSize" Value="16"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Background" Value="{StaticResource Fg}"/>
+        <Setter Property="Foreground" Value="{StaticResource Ink}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource Info}"/>
+        <Setter Property="BorderThickness" Value="2"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="bd" CornerRadius="3" Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          TextElement.Foreground="{TemplateBinding Foreground}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="#F7F1E4"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ============ トグル ============ -->
+
+    <Style x:Key="MiniToggle" TargetType="ToggleButton">
+        <Setter Property="FocusVisualStyle" Value="{StaticResource GoldFocus}"/>
+        <Setter Property="FontSize" Value="11.5"/>
+        <Setter Property="Width" Value="34"/>
+        <Setter Property="Height" Value="26"/>
+        <Setter Property="Foreground" Value="{StaticResource FgDim}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border x:Name="bd" CornerRadius="2" Background="{StaticResource MiniFace}"
+                            BorderBrush="{StaticResource Line}" BorderThickness="1">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          TextElement.Foreground="{TemplateBinding Foreground}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource BtnHover}"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{Binding Tag,
+                                    RelativeSource={RelativeSource TemplatedParent}}"/>
+                            <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource StrongLine}"/>
+                            <Setter Property="Foreground" Value="#F2ECDD"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- 金の小さな摘み（入切） -->
+    <Style x:Key="Switch" TargetType="ToggleButton">
+        <Setter Property="FocusVisualStyle" Value="{StaticResource GoldFocus}"/>
+        <Setter Property="Width" Value="38"/>
+        <Setter Property="Height" Value="21"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border x:Name="bd" CornerRadius="9" Background="{StaticResource Deep}"
+                            BorderBrush="{StaticResource Line}" BorderThickness="1">
+                        <Ellipse x:Name="knob" Width="15" Height="15" Margin="2,0"
+                                 HorizontalAlignment="Left" Fill="{StaticResource FgFaint}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource Good}"/>
+                            <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource Sel}"/>
+                            <Setter TargetName="knob" Property="HorizontalAlignment" Value="Right"/>
+                            <Setter TargetName="knob" Property="Fill" Value="#0C0B09"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="bd" Property="Opacity" Value="0.4"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- 音の細かさ・保存形式の札。上段にやさしい名前、下段に原語。 -->
+    <Style x:Key="Chip" TargetType="ToggleButton">
+        <Setter Property="FocusVisualStyle" Value="{StaticResource GoldFocus}"/>
+        <Setter Property="Margin" Value="0,0,7,7"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border x:Name="bd" CornerRadius="2" Padding="12,6"
+                            Background="{StaticResource Panel}"
+                            BorderBrush="{StaticResource Line}" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock x:Name="t1" Text="{TemplateBinding Content}"
+                                       FontSize="13" Foreground="{StaticResource Fg}"
+                                       HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="t2" Text="{TemplateBinding Tag}"
+                                       FontFamily="Consolas" FontSize="11.5" Margin="0,3,0,0"
+                                       Foreground="{StaticResource FgFaint}" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="#1C1913"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource Info}"/>
+                            <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource Sel}"/>
+                            <Setter TargetName="t1" Property="Foreground" Value="{StaticResource Ink}"/>
+                            <Setter TargetName="t1" Property="FontWeight" Value="Bold"/>
+                            <Setter TargetName="t2" Property="Foreground" Value="#3A2E10"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="bd" Property="Opacity" Value="0.45"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- 音の入り口の一覧。Content が機器名、Tag が副文。 -->
+    <Style x:Key="DeviceRow" TargetType="RadioButton">
+        <Setter Property="FocusVisualStyle" Value="{StaticResource GoldFocus}"/>
+        <Setter Property="Margin" Value="0,0,0,6"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Border x:Name="bd" CornerRadius="2" Padding="11,10"
+                            Background="{StaticResource Panel}"
+                            BorderBrush="{StaticResource Line}" BorderThickness="1">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Ellipse x:Name="ring" Grid.Column="0" Width="14" Height="14"
+                                     Margin="0,1,10,0" VerticalAlignment="Top"
+                                     Stroke="{StaticResource Line}" StrokeThickness="1"
+                                     Fill="Transparent"/>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock x:Name="t1" Text="{TemplateBinding Content}"
+                                           FontSize="14" Foreground="{StaticResource Fg}"
+                                           TextWrapping="Wrap"/>
+                                <TextBlock x:Name="t2" Text="{TemplateBinding Tag}" Margin="0,4,0,0"
+                                           FontSize="12" Foreground="{StaticResource FgDim}"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="#1C1913"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="#221E14"/>
+                            <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource StrongLine}"/>
+                            <Setter TargetName="ring" Property="Stroke" Value="{StaticResource Info}"/>
+                            <Setter TargetName="ring" Property="StrokeThickness" Value="4"/>
+                            <Setter TargetName="ring" Property="Fill" Value="#F2ECDD"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="bd" Property="Opacity" Value="0.55"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ============ 一覧 ============ -->
+
+    <Style x:Key="ComboItem" TargetType="ComboBoxItem">
+        <Setter Property="Foreground" Value="{StaticResource Fg}"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Padding" Value="10,6"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBoxItem">
+                    <Border x:Name="bd" Background="Transparent" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsHighlighted" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource BtnHover}"/>
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="#3A2F12"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="ComboBox">
+        <Setter Property="FocusVisualStyle" Value="{StaticResource GoldFocus}"/>
+        <Setter Property="FontSize" Value="13.5"/>
+        <Setter Property="Height" Value="34"/>
+        <Setter Property="Foreground" Value="{StaticResource Fg}"/>
+        <Setter Property="ItemContainerStyle" Value="{StaticResource ComboItem}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBox">
+                    <Grid>
+                        <ToggleButton Focusable="False" ClickMode="Press"
+                                      IsChecked="{Binding IsDropDownOpen, Mode=TwoWay,
+                                                  RelativeSource={RelativeSource TemplatedParent}}">
+                            <ToggleButton.Template>
+                                <ControlTemplate TargetType="ToggleButton">
+                                    <Border x:Name="bg" CornerRadius="2"
+                                            Background="{StaticResource ButtonFill}"
+                                            BorderBrush="{StaticResource Line}" BorderThickness="1">
+                                        <Path HorizontalAlignment="Right" VerticalAlignment="Center"
+                                              Margin="0,0,10,0" Fill="#C9A227" Data="M 0 0 L 8 0 L 4 5 Z"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bg" Property="Background"
+                                                    Value="{StaticResource BtnHover}"/>
+                                            <Setter TargetName="bg" Property="BorderBrush"
+                                                    Value="{StaticResource StrongLine}"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </ToggleButton.Template>
+                        </ToggleButton>
+
+                        <ContentPresenter Content="{TemplateBinding SelectionBoxItem}"
+                                          ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                          Margin="11,0,26,0" VerticalAlignment="Center"
+                                          IsHitTestVisible="False"
+                                          TextElement.Foreground="{TemplateBinding Foreground}"/>
+
+                        <Popup x:Name="PART_Popup" AllowsTransparency="True" Placement="Bottom"
+                               IsOpen="{TemplateBinding IsDropDownOpen}" Focusable="False"
+                               PopupAnimation="Fade">
+                            <Border Background="{StaticResource Panel}" BorderBrush="{StaticResource StrongLine}"
+                                    BorderThickness="1" CornerRadius="2" Margin="0,2,0,0"
+                                    MinWidth="{TemplateBinding ActualWidth}"
+                                    MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                    <StackPanel IsItemsHost="True"
+                                                KeyboardNavigation.DirectionalNavigation="Contained"/>
+                                </ScrollViewer>
+                            </Border>
+                        </Popup>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.45"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ============ 送り棒・摘み ============ -->
+    <!-- 既定のままだと明るい灰色で浮くので、黒地と金に作り直す。 -->
+
+    <Style x:Key="TrackPiece" TargetType="RepeatButton">
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="IsTabStop" Value="False"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RepeatButton">
+                    <Border Background="Transparent"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="ScrollThumb" TargetType="Thumb">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Thumb">
+                    <Border x:Name="bd" CornerRadius="2" Margin="2"
+                            Background="{StaticResource BrassDeep}"/>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource Info}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="ScrollBar">
+        <Setter Property="Width" Value="11"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ScrollBar">
+                    <Border Background="{StaticResource Deep}" BorderBrush="{StaticResource Line}"
+                            BorderThickness="1,0,0,0">
+                        <Track x:Name="PART_Track" IsDirectionReversed="True">
+                            <Track.DecreaseRepeatButton>
+                                <RepeatButton Command="ScrollBar.PageUpCommand"
+                                              Style="{StaticResource TrackPiece}"/>
+                            </Track.DecreaseRepeatButton>
+                            <Track.Thumb>
+                                <Thumb Style="{StaticResource ScrollThumb}"/>
+                            </Track.Thumb>
+                            <Track.IncreaseRepeatButton>
+                                <RepeatButton Command="ScrollBar.PageDownCommand"
+                                              Style="{StaticResource TrackPiece}"/>
+                            </Track.IncreaseRepeatButton>
+                        </Track>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="Orientation" Value="Horizontal">
+                <Setter Property="Width" Value="Auto"/>
+                <Setter Property="Height" Value="11"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ScrollBar">
+                            <Border Background="{StaticResource Deep}"
+                                    BorderBrush="{StaticResource Line}" BorderThickness="0,1,0,0">
+                                <Track x:Name="PART_Track">
+                                    <Track.DecreaseRepeatButton>
+                                        <RepeatButton Command="ScrollBar.PageLeftCommand"
+                                                      Style="{StaticResource TrackPiece}"/>
+                                    </Track.DecreaseRepeatButton>
+                                    <Track.Thumb>
+                                        <Thumb Style="{StaticResource ScrollThumb}"/>
+                                    </Track.Thumb>
+                                    <Track.IncreaseRepeatButton>
+                                        <RepeatButton Command="ScrollBar.PageRightCommand"
+                                                      Style="{StaticResource TrackPiece}"/>
+                                    </Track.IncreaseRepeatButton>
+                                </Track>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- 金の摘み -->
+    <Style x:Key="SliderThumb" TargetType="Thumb">
+        <Setter Property="Width" Value="11"/>
+        <Setter Property="Height" Value="17"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Thumb">
+                    <Border x:Name="bd" CornerRadius="2" Background="{StaticResource Info}"
+                            BorderBrush="{StaticResource Sel}" BorderThickness="1"/>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="bd" Property="Background" Value="{StaticResource Sel}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="Slider">
+        <Setter Property="Height" Value="22"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Slider">
+                    <Grid>
+                        <Border Height="4" CornerRadius="2" VerticalAlignment="Center"
+                                Background="{StaticResource Deep}"
+                                BorderBrush="{StaticResource Line}" BorderThickness="1"/>
+                        <Track x:Name="PART_Track">
+                            <Track.DecreaseRepeatButton>
+                                <RepeatButton Command="Slider.DecreaseLarge"
+                                              Style="{StaticResource TrackPiece}"/>
+                            </Track.DecreaseRepeatButton>
+                            <Track.Thumb>
+                                <Thumb Style="{StaticResource SliderThumb}"/>
+                            </Track.Thumb>
+                            <Track.IncreaseRepeatButton>
+                                <RepeatButton Command="Slider.IncreaseLarge"
+                                              Style="{StaticResource TrackPiece}"/>
+                            </Track.IncreaseRepeatButton>
+                        </Track>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Opacity" Value="0.45"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- ============ 面 ============ -->
+
+
+    <Style x:Key="PanelBorder" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource Panel}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource Line}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="2"/>
+        <Setter Property="Padding" Value="14"/>
+        <Setter Property="Margin" Value="0,0,0,10"/>
+    </Style>
+
+    <!-- 札（面の中に置く小さな面） -->
+    <Style x:Key="CardBorder" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource PlateFill}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource Line}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="2"/>
+        <Setter Property="Padding" Value="14"/>
+    </Style>
+
+    <!-- 銘板（状態を1行で示す） -->
+    <Style x:Key="PillBorder" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource PlateFill}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource StrongLine}"/>
+        <Setter Property="BorderThickness" Value="2"/>
+        <Setter Property="CornerRadius" Value="2"/>
+        <Setter Property="Padding" Value="18,11"/>
+    </Style>
+
+</ResourceDictionary>

@@ -1,0 +1,590 @@
+<Window x:Class="InstRecorder.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Tonmeister — 録音" Height="880" Width="1140"
+        MinHeight="700" MinWidth="960"
+        Background="{StaticResource Bg}" Foreground="{StaticResource Fg}" FontFamily="Yu Gothic UI, Segoe UI" FontSize="14"
+        TextOptions.TextFormattingMode="Display">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="48"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- ================= 上端：ふだんはタブバー ================= -->
+        <Border x:Name="TabBar" Grid.Row="0" Background="{StaticResource Sunken}"
+                BorderBrush="{StaticResource DoubleRule}" BorderThickness="0,0,0,4">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                    <!-- 機械に打たれた銘板。枠を回し、四隅に鋲を打つ。 -->
+                    <Grid Margin="18,0,0,0" VerticalAlignment="Center">
+                        <Border BorderBrush="{StaticResource BrassDeep}" BorderThickness="1"
+                                CornerRadius="1" Padding="12,4" Background="#12100C">
+                            <StackPanel>
+                                <TextBlock Text="T O N M E I S T E R" FontWeight="Bold" FontSize="13"
+                                           FontFamily="Palatino Linotype, Yu Mincho"
+                                           Foreground="{StaticResource Good}"/>
+                                <Rectangle Height="1" Margin="0,3,0,2" Opacity="0.65"
+                                           Fill="{StaticResource BrassDeep}"/>
+                                <TextBlock Text="録　音" FontSize="9" HorizontalAlignment="Center"
+                                           Foreground="{StaticResource FgFaint}"/>
+                            </StackPanel>
+                        </Border>
+                        <Ellipse Width="3" Height="3" Fill="{StaticResource Info}" Opacity="0.8"
+                                 HorizontalAlignment="Left" VerticalAlignment="Top" Margin="3"/>
+                        <Ellipse Width="3" Height="3" Fill="{StaticResource Info}" Opacity="0.8"
+                                 HorizontalAlignment="Right" VerticalAlignment="Top" Margin="3"/>
+                        <Ellipse Width="3" Height="3" Fill="{StaticResource Info}" Opacity="0.8"
+                                 HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="3"/>
+                        <Ellipse Width="3" Height="3" Fill="{StaticResource Info}" Opacity="0.8"
+                                 HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="3"/>
+                    </Grid>
+                    <Rectangle Width="1" Margin="14,11" Fill="{StaticResource BrassDeep}"/>
+                </StackPanel>
+
+                <!-- 右側の操作 -->
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="0,0,18,0"
+                            VerticalAlignment="Center">
+                    <Grid Margin="0,0,10,0" MinWidth="90">
+                        <TextBlock x:Name="TxtSession" FontSize="11.5" Cursor="IBeam"
+                                   Foreground="{StaticResource FgDim}"
+                                   ToolTip="クリックすると、この録音の名前を変えられます"
+                                   TextTrimming="CharacterEllipsis" MaxWidth="220"
+                                   MouseLeftButtonUp="TxtSession_Click"/>
+                        <TextBox x:Name="EdtSession" FontSize="11.5" Width="220"
+                                 Visibility="Collapsed"
+                                 KeyDown="EdtSession_KeyDown" LostFocus="EdtSession_LostFocus"/>
+                    </Grid>
+                    <Button x:Name="BtnCheck" Style="{StaticResource TopBarButton}" Content="音のチェック"
+                            Margin="0,0,8,0" Click="BtnDiagnostics_Click" Visibility="Collapsed"/>
+                    <Button x:Name="BtnExport" Style="{StaticResource AccentButton}" Content="書き出す"
+                            Margin="0,0,8,0" Click="BtnExport_Click" Visibility="Collapsed"/>
+                    <Button x:Name="BtnList" Style="{StaticResource TopBarButton}" Content="録音一覧"
+                            Margin="0,0,8,0" Click="BtnSessions_Click"/>
+                    <Button x:Name="BtnSettings" Style="{StaticResource TopBarButton}" Content="詳しい設定"
+                            Click="BtnSettings_Click"/>
+
+                    <Popup x:Name="ListPopup" PlacementTarget="{Binding ElementName=BtnList}"
+                           Placement="Bottom" StaysOpen="False" AllowsTransparency="True">
+                        <Border Background="{StaticResource Panel}" BorderBrush="{StaticResource Line}"
+                                BorderThickness="1" CornerRadius="6" Padding="6" Margin="0,4,0,0">
+                            <StackPanel MinWidth="180">
+                                <Button x:Name="BtnNewSession" Content="新しく始める"
+                                        Style="{StaticResource GhostButton}" Height="30"
+                                        HorizontalContentAlignment="Left" BorderThickness="0"
+                                        Background="Transparent" Click="BtnNewSession_Click"/>
+                                <Button x:Name="BtnOpenSession" Content="前の続き"
+                                        Style="{StaticResource GhostButton}" Height="30"
+                                        HorizontalContentAlignment="Left" BorderThickness="0"
+                                        Background="Transparent" Click="BtnOpenSession_Click"/>
+                                <Button Content="フォルダを開く"
+                                        Style="{StaticResource GhostButton}" Height="30"
+                                        HorizontalContentAlignment="Left" BorderThickness="0"
+                                        Background="Transparent" Click="BtnOpenFolder_Click"/>
+                            </StackPanel>
+                        </Border>
+                    </Popup>
+                </StackPanel>
+
+                <!-- タブ2枚 -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                    <Grid>
+                        <Button x:Name="TabRecord" Style="{StaticResource TabButton}" Click="TabRecord_Click">
+                            <TextBlock x:Name="TabRecordText" Text="録る" FontSize="12.5"
+                                       FontWeight="SemiBold" Foreground="{StaticResource Fg}"/>
+                        </Button>
+                        <Rectangle x:Name="TabRecordLine" Height="2" VerticalAlignment="Bottom"
+                                   Fill="{StaticResource Rec}"/>
+                    </Grid>
+                    <Grid>
+                        <Button x:Name="TabOverdub" Style="{StaticResource TabButton}" Click="TabOverdub_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Name="TabOverdubText" Text="重ねる" FontSize="12.5"
+                                           FontWeight="Medium" Foreground="{StaticResource FgFaint}"/>
+                                <Border x:Name="TabBadge" CornerRadius="2" Padding="6,2" Margin="7,0,0,0"
+                                        Background="{StaticResource BtnFace}">
+                                    <TextBlock x:Name="TabBadgeText" Text="まだ0本" FontSize="10"
+                                               Foreground="{StaticResource FgFaint}"/>
+                                </Border>
+                            </StackPanel>
+                        </Button>
+                        <Rectangle x:Name="TabOverdubLine" Height="2" VerticalAlignment="Bottom"
+                                   Fill="Transparent"/>
+                    </Grid>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- ================= 上端：録音中はこちらに差し替わる ================= -->
+        <Border x:Name="RecBar" Grid.Row="0" Background="{StaticResource RecBarBg}"
+                BorderBrush="{StaticResource RecBarLine}" BorderThickness="0,0,0,2"
+                Visibility="Collapsed">
+            <DockPanel Margin="18,0">
+                <TextBlock x:Name="TxtRecSave" DockPanel.Dock="Right" FontSize="11.5"
+                           Foreground="{StaticResource RecBarDim}" Text="約2秒ごとに自動保存中・取りこぼし 0"/>
+                <Ellipse x:Name="RecDot" Width="10" Height="10" Fill="{StaticResource RecBright}"
+                         Stroke="{StaticResource Info}" StrokeThickness="1"
+                         VerticalAlignment="Center"/>
+                <TextBlock Text="録音中" FontWeight="Bold" FontSize="13" Margin="9,0,16,0"
+                           Foreground="{StaticResource RecBarFg}"/>
+                <TextBlock x:Name="TxtRecTarget" FontSize="12" Foreground="{StaticResource RecBarSub}"/>
+            </DockPanel>
+        </Border>
+
+        <!-- ================= 01「録る」モード ================= -->
+        <ScrollViewer x:Name="RecordPane" Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                      Background="{StaticResource StageBg}">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="40,26">
+
+                <!-- 手順の札。いま何をする番なのかを、常に1つだけ光らせる。 -->
+                <StackPanel x:Name="PnlSteps" Orientation="Horizontal"
+                            HorizontalAlignment="Center" Margin="0,0,0,20">
+                    <Border x:Name="Step1" CornerRadius="2" Padding="14,9" BorderThickness="1"
+                            Background="{StaticResource PlateFill}" BorderBrush="{StaticResource Line}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Name="Step1No" Text="１" FontFamily="Consolas"
+                                       FontWeight="Bold" FontSize="14"/>
+                            <TextBlock x:Name="Step1Text" Text="マイクを確かめる" FontSize="13"
+                                       Margin="9,0,0,0"/>
+                        </StackPanel>
+                    </Border>
+                    <TextBlock Text="→" Margin="10,0" FontSize="13"
+                               Foreground="{StaticResource FgFaint}"/>
+                    <Border x:Name="Step2" CornerRadius="2" Padding="14,9" BorderThickness="1"
+                            Background="{StaticResource PlateFill}" BorderBrush="{StaticResource Line}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Name="Step2No" Text="２" FontFamily="Consolas"
+                                       FontWeight="Bold" FontSize="14"/>
+                            <TextBlock x:Name="Step2Text" Text="音量を合わせる" FontSize="13"
+                                       Margin="9,0,0,0"/>
+                        </StackPanel>
+                    </Border>
+                    <TextBlock Text="→" Margin="10,0" FontSize="13"
+                               Foreground="{StaticResource FgFaint}"/>
+                    <Border x:Name="Step3" CornerRadius="2" Padding="14,9" BorderThickness="1"
+                            Background="{StaticResource PlateFill}" BorderBrush="{StaticResource Line}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Name="Step3No" Text="３" FontFamily="Consolas"
+                                       FontWeight="Bold" FontSize="14"/>
+                            <TextBlock x:Name="Step3Text" Text="録音する" FontSize="13"
+                                       Margin="9,0,0,0"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- 状態ピル -->
+                <Border Style="{StaticResource PillBorder}" HorizontalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse x:Name="StatusDot" Width="7" Height="7" Fill="{StaticResource FgDim}"/>
+                        <TextBlock x:Name="TxtStatusLine" FontSize="12" Margin="10,0,0,0"/>
+                        <Button x:Name="BtnChangeInput" Content="変える" Margin="12,0,0,0" Height="18"
+                                Padding="0" Background="Transparent" BorderThickness="0"
+                                FontSize="11.5" Foreground="{StaticResource Sel}"
+                                Click="BtnSettings_Click"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- 録音ボタン（外周が入力レベルのメーター） -->
+                <Grid Width="290" Height="290" Margin="0,26,0,0" HorizontalAlignment="Center">
+                    <!-- 彫金の地紋。版を彫るときの唐草にならった、細い金の線。 -->
+                    <Canvas x:Name="GuillocheCanvas" Width="520" Height="520" Margin="-115"
+                            IsHitTestVisible="False"/>
+                    <Canvas x:Name="RingCanvas" Width="290" Height="290"/>
+                    <Ellipse Width="264" Height="264" Fill="{StaticResource Bg}"
+                             Stroke="{StaticResource BrassDeep}" StrokeThickness="1"/>
+                    <Button x:Name="BtnRecordBig" Width="248" Height="248" Click="BtnRecord_Click">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Grid x:Name="root">
+                                    <Ellipse x:Name="face" Fill="{StaticResource RecLacquer}"
+                                             Stroke="{StaticResource Good}" StrokeThickness="3">
+                                        <Ellipse.Effect>
+                                            <DropShadowEffect Color="#000000" BlurRadius="18"
+                                                              ShadowDepth="3" Direction="270"
+                                                              Opacity="0.5"/>
+                                        </Ellipse.Effect>
+                                    </Ellipse>
+                                    <ContentPresenter HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center"/>
+                                </Grid>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="face" Property="Fill" Value="#93342A"/>
+                                    </Trigger>
+                                    <Trigger Property="IsEnabled" Value="False">
+                                        <Setter TargetName="root" Property="Opacity" Value="0.4"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                        <StackPanel>
+                            <Ellipse Width="30" Height="30" Fill="#F2ECDD"
+                                     Stroke="#E3C766" StrokeThickness="1"
+                                     HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="TxtRecordBig" Text="録音する" FontWeight="Bold" FontSize="19"
+                                       Foreground="#F2ECDD" Margin="0,6,0,0" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="TxtRecordHint" Text="Space でも押せます" FontSize="11.5"
+                                       Foreground="#D8F2ECDD" Margin="0,6,0,0"
+                                       HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <!-- 横メーター -->
+                <StackPanel Width="470" Margin="0,26,0,0" HorizontalAlignment="Center">
+                    <DockPanel Margin="0,0,0,7">
+                        <TextBlock DockPanel.Dock="Right" Text="dBFS" FontFamily="Consolas"
+                                   FontSize="11" Foreground="{StaticResource FgFaint}"/>
+                        <TextBlock Text="音の大きさ" FontSize="12.5"
+                                   Foreground="{StaticResource FgDim}"/>
+                    </DockPanel>
+
+                    <!-- 計器の窓。縁を二重にして、板に彫った目盛りに見せる。 -->
+                    <Border CornerRadius="2" Background="{StaticResource Deep}"
+                            BorderBrush="{StaticResource StrongLine}" BorderThickness="2"
+                            Padding="2" ClipToBounds="True">
+                        <Border Height="18" Background="#080706" ClipToBounds="True">
+                            <Grid x:Name="MeterHost">
+                                <Rectangle x:Name="MeterGoodBand" HorizontalAlignment="Left"
+                                           Fill="#3DC9A227"/>
+                                <Rectangle x:Name="MeterLevel" HorizontalAlignment="Left" Width="0"
+                                           Fill="{StaticResource LevelFill}"/>
+                            </Grid>
+                        </Border>
+                    </Border>
+
+                    <!-- 彫った目盛り。数字を添えて、いくつを狙えばよいのかを見せる。 -->
+                    <Canvas x:Name="ScaleCanvas" Height="17" Margin="4,3,4,0"
+                            SizeChanged="Scale_SizeChanged"/>
+
+                    <Grid Margin="0,4,0,0">
+                        <TextBlock Text="小さすぎ" FontSize="11.5" HorizontalAlignment="Left"
+                                   Foreground="{StaticResource FgFaint}"/>
+                        <TextBlock x:Name="TxtGoodLabel" Text="ちょうどよい" FontSize="11.5"
+                                   FontWeight="Bold" HorizontalAlignment="Left"
+                                   Foreground="{StaticResource Good}"/>
+                        <TextBlock Text="割れる" FontSize="11.5" HorizontalAlignment="Right"
+                                   Foreground="{StaticResource FgFaint}"/>
+                    </Grid>
+                    <TextBlock x:Name="TxtVerdict" FontSize="13.5" LineHeight="23" Margin="0,14,0,0"
+                               TextAlignment="Center" TextWrapping="Wrap"
+                               Text="マイクを選んでください。"/>
+                </StackPanel>
+
+                <!-- 補助 -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,26,0,0">
+                    <Button x:Name="BtnCheck2" Style="{StaticResource GhostButton}"
+                            Content="音のチェックをする" Click="BtnDiagnostics_Click"/>
+                    <Button x:Name="BtnMonitor" Style="{StaticResource GhostButton}" Margin="10,0,0,0"
+                            Content="ヘッドホンで自分の音を聞く" Click="BtnMonitor_Click"/>
+                </StackPanel>
+                <TextBlock x:Name="TxtMonitorInfo" Style="{StaticResource Faint}" Margin="0,8,0,0"
+                           TextAlignment="Center"/>
+                <!-- 版面の締め。印刷所の飾り罫にならって、細い金の罫と菱形で閉じる。 -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,24,0,0">
+                    <Rectangle Width="86" Height="1" VerticalAlignment="Center"
+                               Fill="{StaticResource BrassDeep}"/>
+                    <Canvas x:Name="RosetteCanvas" Width="22" Height="22" Margin="12,0"
+                            VerticalAlignment="Center"/>
+                    <Rectangle Width="86" Height="1" VerticalAlignment="Center"
+                               Fill="{StaticResource BrassDeep}"/>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- 報せの帯。録り終わりの一言と、取り消しの受け皿。 -->
+        <Border x:Name="NoticeStrip" Grid.Row="1" Panel.ZIndex="10" Visibility="Collapsed"
+                HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,14,0,0"
+                CornerRadius="2" Padding="14,9" Background="{StaticResource Panel}"
+                BorderBrush="{StaticResource StrongLine}" BorderThickness="1">
+            <Border.Effect>
+                <DropShadowEffect Color="#000000" BlurRadius="16" ShadowDepth="3"
+                                  Direction="270" Opacity="0.6"/>
+            </Border.Effect>
+            <StackPanel Orientation="Horizontal">
+                <Ellipse x:Name="NoticeDot" Width="7" Height="7" VerticalAlignment="Center"
+                         Fill="{StaticResource Good}"/>
+                <TextBlock x:Name="TxtNotice" FontSize="12" Margin="10,0,0,0"
+                           MaxWidth="620" TextWrapping="Wrap"/>
+                <Button x:Name="BtnNoticeAction" Height="24" Padding="11,0" FontSize="11"
+                        Margin="14,0,0,0" Visibility="Collapsed" Click="BtnNoticeAction_Click"/>
+                <Button x:Name="BtnNoticeClose" Content="✕" Width="24" Height="24" Padding="0"
+                        FontSize="11" Margin="8,0,0,0" Foreground="{StaticResource FgFaint}"
+                        Click="BtnNoticeClose_Click"/>
+            </StackPanel>
+        </Border>
+
+        <!-- ================= 02 録音中 ================= -->
+        <Grid x:Name="RecordingPane" Grid.Row="1" Background="{StaticResource StageRecBg}"
+              Visibility="Collapsed">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="40,52">
+                <TextBlock x:Name="TxtBigTime" Text="00:00:00.0" FontFamily="Consolas" FontSize="76"
+                           HorizontalAlignment="Center"/>
+
+                <StackPanel Width="560" Margin="0,30,0,0">
+                    <Border Height="56" CornerRadius="6" Background="{StaticResource Deep}"
+                            BorderBrush="{StaticResource Line}" BorderThickness="1" ClipToBounds="True">
+                        <Canvas x:Name="LiveWave" Background="Transparent"/>
+                    </Border>
+                    <Grid Margin="0,9,0,0">
+                        <TextBlock Text="いま録れている音" FontSize="11.5" HorizontalAlignment="Left"
+                                   Foreground="{StaticResource FgDim}"/>
+                        <TextBlock x:Name="TxtLiveLevel" FontSize="11.5" HorizontalAlignment="Right"
+                                   Foreground="{StaticResource Good}"/>
+                    </Grid>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,30,0,0">
+                    <Button x:Name="BtnStopBig" Style="{StaticResource StopBigButton}"
+                            Content="■ 録音をやめる" Click="BtnStop_Click"/>
+                    <TextBlock Text="Esc / Space" FontSize="11.5" Margin="12,0,0,0"
+                               Foreground="{StaticResource FgFaint}"/>
+                </StackPanel>
+
+                <!-- ズレ合わせ未測定のまま重ね録りを始めたときだけ、一度出す -->
+                <Border x:Name="AlignToast" Margin="0,22,0,0" CornerRadius="6" Padding="13,10"
+                        HorizontalAlignment="Center" Visibility="Collapsed"
+                        Background="#22B06A2C" BorderBrush="#77B06A2C" BorderThickness="1">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="ズレ合わせを測っていないので、後ろにズレて録れます"
+                                   FontSize="11.5" Foreground="{StaticResource Warn}"/>
+                        <Button Content="測る" Height="24" Padding="11,0" FontSize="11"
+                                Margin="12,0,0,0" Click="AlignToastMeasure_Click"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Grid>
+
+        <!-- ================= 03「重ねる」モード ================= -->
+        <Grid x:Name="OverdubPane" Grid.Row="1" Visibility="Collapsed">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- トランスポート帯 -->
+            <Border Grid.Row="0" Background="{StaticResource Sunken}" Padding="18,12"
+                    BorderBrush="{StaticResource DoubleRule}" BorderThickness="0,0,0,4">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+                        <Button x:Name="BtnRecordSmall" Style="{StaticResource RecordButton}"
+                                Click="BtnRecord_Click" ToolTip="録音する（R）">
+                            <Ellipse Width="13" Height="13" Fill="#F2ECDD"/>
+                        </Button>
+                        <Button x:Name="BtnPlay" Style="{StaticResource TransportButton}" Content="▶"
+                                Margin="8,0,0,0" Click="BtnPlay_Click" ToolTip="はじめから聞く（Space）"/>
+                        <Button x:Name="BtnStop" Style="{StaticResource TransportButton}" Content="■"
+                                Margin="8,0,0,0" Foreground="{StaticResource FgFaint}"
+                                Click="BtnStop_Click" ToolTip="やめる（Esc）"/>
+                    </StackPanel>
+
+                    <TextBlock x:Name="TxtTime" Grid.Column="1" Text="00:00:00.0" FontFamily="Consolas"
+                               FontSize="24" Margin="18,0,0,0"/>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="18,0,0,0"
+                                VerticalAlignment="Center" HorizontalAlignment="Left">
+                        <Border Width="240" Height="10" CornerRadius="5" Background="{StaticResource Deep}"
+                                BorderBrush="{StaticResource Line}" BorderThickness="1" ClipToBounds="True">
+                            <Grid x:Name="MiniMeterHost">
+                                <Rectangle x:Name="MiniGoodBand" HorizontalAlignment="Left"
+                                           Fill="#3DC9A227"/>
+                                <Rectangle x:Name="MiniLevel" HorizontalAlignment="Left" Width="0"
+                                           Fill="{StaticResource LevelFill}"/>
+                            </Grid>
+                        </Border>
+                        <TextBlock x:Name="TxtMiniVerdict" FontSize="11" Margin="9,0,0,0"
+                                   Foreground="{StaticResource Good}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="3" Orientation="Horizontal">
+                        <TextBlock Text="録る場所" FontSize="11" Margin="0,0,9,0"
+                                   Foreground="{StaticResource FgDim}"/>
+                        <ComboBox x:Name="CmbRecordTarget" MinWidth="210" Height="32"/>
+                        <Button x:Name="BtnAlign" Height="26" Padding="11,0" FontSize="11"
+                                Margin="9,0,0,0" Click="BtnAlign_Click"
+                                ToolTip="重ね録りのズレを測ります"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- 本体：レーン＋インスペクタ -->
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="268"/>
+                </Grid.ColumnDefinitions>
+
+                <Grid Grid.Column="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="26"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- 時間ルーラー（レーンの波形と左端を揃える） -->
+                    <Border Grid.Row="0" Background="{StaticResource Sunken}"
+                            BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1">
+                        <Canvas x:Name="RulerCanvas" Margin="159,0,9,0" ClipToBounds="True"
+                                SizeChanged="Ruler_SizeChanged"/>
+                    </Border>
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <StackPanel x:Name="LaneHost"/>
+                            <StackPanel Orientation="Horizontal" Background="{StaticResource Sunken}">
+                                <Button x:Name="BtnAddLayer" Style="{StaticResource DashedButton}"
+                                        Content="＋ この上に重ねて録る" Margin="16,14,10,14"
+                                        Click="BtnRecord_Click"/>
+                                <TextBlock Text="ヘッドホンを着けてから押してください" FontSize="11"
+                                           Foreground="{StaticResource FgFaint}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+
+                <!-- 右インスペクタ -->
+                <Border Grid.Column="1" Background="{StaticResource Sunken}"
+                        BorderBrush="{StaticResource Line}" BorderThickness="1,0,0,0" Padding="16">
+                    <DockPanel>
+                        <Button DockPanel.Dock="Bottom" Style="{StaticResource AccentButton}"
+                                Content="1つの音にまとめて書き出す" Height="38"
+                                HorizontalAlignment="Stretch" Click="BtnExport_Click"/>
+
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel>
+                            <TextBlock Text="いま選んでいるもの" FontWeight="Bold" FontSize="12.5"
+                                       Margin="0,0,0,6"/>
+                            <Rectangle Height="1" Margin="0,0,0,10" Opacity="0.55" Fill="{StaticResource BrassDeep}"/>
+
+                            <TextBlock x:Name="TxtNoSelection" Style="{StaticResource Sub}"
+                                       Text="波形をクリックするとそのトラックを選べます。ドラッグすると「使いたいところ」を選べます。"/>
+
+                            <StackPanel x:Name="PnlInspector" Visibility="Collapsed">
+                                <Border Style="{StaticResource CardBorder}">
+                                    <StackPanel>
+                                        <TextBlock x:Name="TxtSelTitle" FontWeight="SemiBold"
+                                                   FontSize="12" TextWrapping="Wrap"/>
+                                        <TextBlock x:Name="TxtSelBody" Style="{StaticResource Sub}"
+                                                   Margin="0,8,0,0" LineHeight="19"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Style="{StaticResource CardBorder}" Margin="0,10,0,0">
+                                    <StackPanel>
+                                        <TextBlock Text="あとから直せること" FontWeight="SemiBold"
+                                                   FontSize="12" Margin="0,0,0,10"/>
+                                        <DockPanel Margin="0,0,0,8">
+                                            <ToggleButton x:Name="TglHum" DockPanel.Dock="Right"
+                                                          Style="{StaticResource Switch}"
+                                                          Checked="Processing_Changed"
+                                                          Unchecked="Processing_Changed"/>
+                                            <TextBlock Text="電源のブーンという音を消す" FontSize="11.5"
+                                                       TextWrapping="Wrap" Margin="0,0,8,0"/>
+                                        </DockPanel>
+                                        <DockPanel>
+                                            <ToggleButton x:Name="TglGate" DockPanel.Dock="Right"
+                                                          Style="{StaticResource Switch}"
+                                                          Checked="Processing_Changed"
+                                                          Unchecked="Processing_Changed"/>
+                                            <TextBlock Text="弾いていない間を静かにする" FontSize="11.5"
+                                                       TextWrapping="Wrap" Margin="0,0,8,0"/>
+                                        </DockPanel>
+                                        <TextBlock Text="切れば元の音に戻ります。" Style="{StaticResource Faint}"
+                                                   Margin="0,10,0,0"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <Button x:Name="BtnEditTrack" Style="{StaticResource TopBarButton}"
+                                        Content="波形を見て直す" Margin="0,10,0,0"
+                                        HorizontalAlignment="Stretch" Click="BtnEditTrack_Click"/>
+                                <Button x:Name="BtnRemoveTrack" Style="{StaticResource TopBarButton}"
+                                        Content="このトラックを外す" Margin="0,8,0,0"
+                                        Foreground="{StaticResource FgDim}"
+                                        HorizontalAlignment="Stretch" Click="BtnRemoveTrack_Click"/>
+                            </StackPanel>
+
+                            <!-- 鳴らす場所。トラックごとではなく録音まるごとにかかる -->
+                            <TextBlock Text="鳴らす場所" FontWeight="Bold" FontSize="12.5"
+                                       Margin="0,20,0,6"/>
+                            <Rectangle Height="1" Margin="0,0,0,10" Opacity="0.55"
+                                       Fill="{StaticResource BrassDeep}"/>
+
+                            <Border Style="{StaticResource CardBorder}">
+                                <StackPanel>
+                                    <DockPanel Margin="0,0,0,10">
+                                        <ToggleButton x:Name="TglHall" DockPanel.Dock="Right"
+                                                      Style="{StaticResource Switch}"
+                                                      Checked="Hall_Changed" Unchecked="Hall_Changed"/>
+                                        <TextBlock Text="ホールの響きを足す" FontSize="11.5"
+                                                   TextWrapping="Wrap" Margin="0,0,8,0"/>
+                                    </DockPanel>
+
+                                    <StackPanel x:Name="PnlHall" IsEnabled="False">
+                                        <ComboBox x:Name="CmbHall" Height="28" FontSize="11.5"
+                                                  Margin="0,0,0,9"
+                                                  SelectionChanged="Hall_Changed"/>
+
+                                        <Button x:Name="BtnHallFile" Style="{StaticResource TopBarButton}"
+                                                Content="響きのファイルを選ぶ" Margin="0,0,0,9"
+                                                Visibility="Collapsed"
+                                                HorizontalAlignment="Stretch" Click="BtnHallFile_Click"/>
+
+                                        <StackPanel x:Name="PnlHallDecay">
+                                            <DockPanel Margin="0,0,0,1">
+                                                <TextBlock x:Name="TxtHallDecay" DockPanel.Dock="Right"
+                                                           Text="2.0 秒" FontFamily="Courier New" FontSize="11"
+                                                           TextAlignment="Right"
+                                                           Foreground="{StaticResource FgDim}"/>
+                                                <TextBlock Text="響きの長さ" FontSize="11"
+                                                           Foreground="{StaticResource FgDim}"/>
+                                            </DockPanel>
+                                            <Slider x:Name="SldHallDecay" Minimum="0.2" Maximum="6"
+                                                    Value="2" Margin="0,0,0,9"
+                                                    ValueChanged="HallSlider_Changed"/>
+                                        </StackPanel>
+
+                                        <DockPanel Margin="0,0,0,1">
+                                            <TextBlock x:Name="TxtHallMix" DockPanel.Dock="Right"
+                                                       Text="25 %" FontFamily="Courier New" FontSize="11"
+                                                       TextAlignment="Right"
+                                                       Foreground="{StaticResource FgDim}"/>
+                                            <TextBlock Text="響きの量" FontSize="11"
+                                                       Foreground="{StaticResource FgDim}"/>
+                                        </DockPanel>
+                                        <Slider x:Name="SldHallMix" Minimum="0" Maximum="100"
+                                                Value="25" Margin="0,0,0,9"
+                                                ValueChanged="HallSlider_Changed"/>
+
+                                        <DockPanel Margin="0,0,0,1">
+                                            <TextBlock x:Name="TxtHallPre" DockPanel.Dock="Right"
+                                                       Text="30 ms" FontFamily="Courier New" FontSize="11"
+                                                       TextAlignment="Right"
+                                                       Foreground="{StaticResource FgDim}"/>
+                                            <TextBlock Text="直接音から響きまでの間" FontSize="11"
+                                                       Foreground="{StaticResource FgDim}"/>
+                                        </DockPanel>
+                                        <Slider x:Name="SldHallPre" Minimum="25" Maximum="150"
+                                                Value="30" Margin="0,0,0,4"
+                                                ValueChanged="HallSlider_Changed"/>
+                                    </StackPanel>
+
+                                    <TextBlock x:Name="TxtHallNote" Style="{StaticResource Faint}"
+                                               Margin="0,8,0,0" TextWrapping="Wrap"
+                                               Text="録った音そのものは変わりません。切ればすぐ元に戻ります。"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                        </ScrollViewer>
+                    </DockPanel>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

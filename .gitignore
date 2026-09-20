@@ -1,0 +1,10 @@
+# .NET
+desktop/**/bin/
+desktop/**/obj/
+*.user
+# 配置した exe の前の版とデバッグ情報
+app/*.pdb
+app/*.前の版
+# OS
+Thumbs.db
+.DS_Store
