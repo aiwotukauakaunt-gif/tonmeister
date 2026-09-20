@@ -275,7 +275,14 @@ web/
   serve.js            付属の小さなサーバ（依存なし）
   css/theme.css       共通のテーマ（Theme.xaml を移したもの）
   js/
-    app.js            画面の中枢（MainWindow ＋ TrackLane ＋ 各窓）
+    app.js            入口：起動・配線（キー操作）。画面の中身は ui/ に分けてある
+    ui/context.js     共有部品：状態・エンジン・DOM の小物・音の読み書き・報せの帯・問い・セッションの出し入れ
+    ui/record.js      「録る」：入力の開閉・メーター・録音の開始と停止・録音証明・経路の格・試し弾き
+    ui/overdub.js     「重ねる」：レーン・インスペクタ・素／仕上げ・切り出しと録り直し・波形を見て直す
+    ui/settings.js    詳しい設定・フォルダ直書き・スマホと PWA・言語
+    ui/diagnostics.js 音のチェック・スイープで測る・マイク位置の録り比べ
+    ui/export.js      書き出し（素／仕上げ・BWF・FLAC・録音証明・セッション丸ごと）
+    ui/sessions.js    録音一覧・持ち込み・元に戻す
     engine.js         入力の開閉・録音・再生（素／仕上げの2経路）・モニター・ズレ合わせ・ドリフト（RecorderEngine）
     finish.js         仕上げの一式：段階ダイヤル・2経路の配線・盛り度の測定
     quality.js        経路の格（開いた瞬間の判定）と試し弾きの助言

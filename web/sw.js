@@ -2,13 +2,14 @@
    オフラインでも開けるように自分のファイルをキャッシュ。
    ネットワーク優先（更新をすぐ反映）→ 失敗したらキャッシュ。keyboard と同じ型。
    Worker / AudioWorklet のスクリプトも同じ origin なので、同じ扱いで拾う。 */
-const CACHE = 'tonmeister-v1';
+const CACHE = 'tonmeister-v2';
 const ASSETS = [
   './', './index.html', './manifest.json', './css/theme.css',
   './js/app.js', './js/engine.js', './js/capture-core.js', './js/capture-worker.js', './js/storage-worker.js',
   './js/worklets.js', './js/wav.js', './js/analysis.js', './js/edit.js', './js/waveform.js', './js/model.js',
   './js/store.js', './js/meterscale.js', './js/finish.js', './js/reverb.js', './js/quality.js', './js/sweep.js',
-  './js/miccal.js', './js/disk-writer.js', './js/importer.js', './js/i18n.js',
+  './js/miccal.js', './js/disk-writer.js', './js/importer.js', './js/i18n.js', './js/flac.js',
+  './js/ui/context.js', './js/ui/record.js', './js/ui/overdub.js', './js/ui/settings.js', './js/ui/diagnostics.js', './js/ui/export.js', './js/ui/sessions.js',
   './icon-192.png', './icon-512.png', './icon-512-maskable.png', './apple-touch-icon.png',
 ];
 
