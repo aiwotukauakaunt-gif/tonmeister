@@ -19,6 +19,7 @@ import { truePeakOf, CaptureCore } from './capture-core.js';
 import * as Reverb from './reverb.js';
 import * as Finish from './finish.js';
 import { newFinish } from './model.js';
+import { StreamClock, SideCutter } from './side-align.js';
 
 const RATE = 48000;
 
@@ -973,6 +974,90 @@ async function testFlac() {
   await wait();
 }
 
+/* ---------------- ⑭ 脇の録りの揃え（side-align.js） ---------------- */
+
+async function testSideAlign() {
+  section('⑭ 脇の録りの揃え（keyboard の音を同じ時刻で切る）');
+  // 共通の時間軸に乗った 2 本のストリーム。中身は「絶対フレーム番号」から決まる同じ関数なので、揃っていれば差 0
+  const rate = 48000;
+  const sig = (k) => Math.sin(k * 0.01) * 0.5 + ((k * 7919) % 1000) / 1000 * 0.01;
+  let seed = 5;
+  const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+  const T0 = 3_000_000;                 // 時計の原点（µs）
+  const usPerFrame = 1e6 / rate;
+
+  // 本線：480 フレーム刻み。届く遅れ（0〜7 ms、実測の揺れ幅）を timestamp に足す
+  const mainClock = new StreamClock();
+  let mainFrames = 0;                  // 本線の累計（＝絶対フレーム番号。本線は原点から始まる）
+  const mainFeed = () => { const ts = T0 + mainFrames * usPerFrame + rnd() * 7000; mainClock.feed(ts, mainFrames, rate); mainFrames += 480; };
+
+  // 脇：本線より 137 フレーム遅れて始まり、441 フレーム刻み。同じ遅れの揺れ。途中で 1 枚（441 フレーム）抜ける
+  const got = [];
+  let ended = 0;
+  const cutter = new SideCutter((m) => { if (m.samples) got.push(m.samples); if (m.end) ended++; }, { blockFrames: 1024 });
+  const SIDE_START = 137;
+  let sideAbs = SIDE_START;            // 脇の次の札の絶対フレーム番号
+  const sideFeed = (drop = false) => {
+    const n = 441;
+    if (drop) { sideAbs += n; return; }
+    const samples = new Float32Array(n);
+    for (let i = 0; i < n; i++) samples[i] = sig(sideAbs + i);
+    cutter.feed(samples, T0 + sideAbs * usPerFrame + rnd() * 7000, rate);
+    sideAbs += n;
+  };
+
+  // 3 秒ぶん流す（両方、同じ実時間だけ）。それから本線が「いまのフレーム」から録り始める
+  const sideCatchUp = (drop = false) => { while (sideAbs + 441 <= mainFrames) sideFeed(drop && sideAbs === dropAt); };
+  let dropAt = -1;
+  for (let k = 0; k < 300; k++) { mainFeed(); sideCatchUp(); }
+  const startFrame = mainFrames;                 // 本線の開始フレーム（絶対）
+  cutter.begin(mainClock.timeOf(startFrame, rate));
+  // 2 秒ぶん録る。途中（0.5 秒あたり）で脇の札が 1 枚抜ける
+  dropAt = sideAbs + 441 * Math.ceil((startFrame + 24000 - sideAbs) / 441);
+  for (let k = 0; k < 200; k++) { mainFeed(); sideCatchUp(true); }
+  const stopFrame = mainFrames;
+  cutter.end(mainClock.timeOf(stopFrame, rate));
+  // 止めた時刻の札がまだ届いていないかもしれないので、少し流す
+  for (let k = 0; k < 5; k++) sideFeed();
+
+  let total = 0; for (const g of got) total += g.length;
+  const out = new Float32Array(total); let p = 0; for (const g of got) { out.set(g, p); p += g.length; }
+
+  const expectLen = stopFrame - startFrame;
+  check('切り出した長さ', `${expectLen} フレーム（本線と同じ）`, String(total), Math.abs(total - expectLen) <= 1);
+  check('止めたら end が 1 回', '1', String(ended), ended === 1);
+
+  // 中身：脇の k 番目 = 絶対フレーム startFrame + k の信号。抜けた 1 枚（441 フレーム）は無音で埋まる。
+  // 抜けの検出は 20 枚（約 200 ms）遅れて確定するので、無音が入る位置はその範囲で後ろにずれてよい。
+  // 抜けの前（開始から約 0.5 秒）は厳密に一致、抜けの検出より後（+25 枚）も厳密に一致すること
+  const dropStart = dropAt - startFrame;
+  let maxBefore = 0, maxAfter = 0, worstAt = -1, zeros = 0;
+  for (let k = 0; k < Math.min(total, expectLen); k++) {
+    const want = sig(startFrame + k);
+    const e = Math.abs(out[k] - want);
+    if (k < dropStart) { if (e > maxBefore) { maxBefore = e; worstAt = k; } }
+    else if (k >= dropStart + 441 * 25) { if (e > maxAfter) maxAfter = e; }
+    else if (out[k] === 0) zeros++;
+  }
+  // 時計の原点は両方とも「いちばん早く届いた札」で決まるので、揺れの下限が揃っていれば標本単位で合う。1〜2 標本のずれは許す
+  let bestLag = 0, bestErr = Infinity;
+  for (let lag = -3; lag <= 3; lag++) { let m = 0; for (let k = 100; k < dropStart - 3; k++) m = Math.max(m, Math.abs(out[k] - sig(startFrame + k + lag))); if (m < bestErr) { bestErr = m; bestLag = lag; } }
+  check('本線と同じ時刻の標本から始まる（抜けまで）', 'ずれ 0 ± 2 標本・差 0', `ずれ ${bestLag} 標本・差 ${bestErr.toExponential(2)}`, Math.abs(bestLag) <= 2 && bestErr < 1e-6);
+  { let m = Infinity; for (let lag = -3; lag <= 3; lag++) { let e2 = 0; for (let k = dropStart + 441 * 25; k < Math.min(total, expectLen); k++) e2 = Math.max(e2, Math.abs(out[k] - sig(startFrame + k + lag))); m = Math.min(m, e2); } maxAfter = m; }
+  check('1 枚の抜けを見つけて無音で埋め、時間を保つ', '441 フレームの 0・その後も差 0', `0 が ${zeros}・後の差 ${maxAfter.toExponential(2)}`, zeros === 441 && maxAfter < 1e-6);
+
+  // 時計の推定：遅れは足される方向にしか揺れないので、最小を取れば原点に近づく
+  const offErr = Math.abs(mainClock.off - T0);
+  check('時計の原点（3 秒＝300 枚で）', 'T0 ± 0.04 ms（2 標本以内）', `${(offErr / 1000).toFixed(4)} ms`, offErr < 41.7);
+
+  // 繋いだ直後（時計がまだ無い）に開始が来たら、最初の札を待って始める
+  const late = new SideCutter(() => { }, { blockFrames: 1024 });
+  late.begin(T0 + 1e6);
+  check('時計が無いうちの開始は保留になる', '保留', late.pendingStart != null ? '保留' : '無視', late.pendingStart != null);
+  late.feed(new Float32Array(441), T0 + 1e6 - 100 * usPerFrame, rate);
+  check('最初の札が来たら始まる', '録音中', late.recording ? '録音中' : '止まっている', late.recording === true);
+}
+
 /* ================= 走らせる ================= */
 
 document.querySelector('#run').onclick = async () => {
@@ -995,6 +1080,7 @@ document.querySelector('#run').onclick = async () => {
     step('⑪ 質…'); await testQuality();
     step('⑫ 証明・測定・部屋…'); await testKarajan();
     step('⑬ FLAC…'); await testFlac();
+    step('⑭ 脇の録りの揃え…'); await testSideAlign();
     step('終わりました。');
   } catch (e) {
     section('途中で止まりました');

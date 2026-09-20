@@ -185,6 +185,8 @@ export const EN = {
   '風音カット': 'rumble cut', 'ハム除去': 'hum removal', 'ゲート': 'gate', '{hall} {sec}秒・量 {pct}%': '{hall} {sec} s · {pct}%', '音量そろえ {db} dBTP': 'level {db} dBTP',
   'マイク補正（戻し：{name}）': 'mic correction (undo: {name})', '較正ファイル': 'calibration file',
   '素と1サンプルも違いません。': 'Identical to the raw take, sample for sample.', '音量 {db} dB': 'level {db} dB', '音の変化 {db} dB（素に対して）': 'sound change {db} dB (vs raw)', '尾 {sec} 秒': 'tail {sec} s', '静かな部分 {db} dB': 'quiet parts {db} dB',
+  '　この環境（生取得なし）では揃いは ±10 ms ほどです。': ' In this browser (no raw capture) the alignment is within about ±10 ms.',
+  '／揃い：標本単位（timestamp）': ' / alignment: sample-exact (timestamps)', '／揃い：±10 ms ほど（AudioContext 経由）': ' / alignment: about ±10 ms (via AudioContext)',
   // keyboard の中で
   'keyboard の音も録る': "Also record keyboard's sound", 'keyboard の音': 'keyboard',
   'メトロノーム・伴奏ループ・鍵盤の音を、別のトラックに。マイクの録りには混ぜません': 'Metronome, looper and keys go to a separate track — never mixed into the mic take',

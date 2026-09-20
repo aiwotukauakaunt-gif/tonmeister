@@ -730,7 +730,9 @@ export async function addSideTake(recorded) {
   const name = T('keyboard の音');
   const track = await addRecordedTake(side, null, '', {
     startSeconds, trackName: name, quiet: true,
-    provenance: { device: 'keyboard (app bus)', path: 'audiocontext', processing: 'off', resampled: hostRate() > 0 && hostRate() !== rate, sideOffsetSeconds: startSeconds, side: true },
+    provenance: { device: 'keyboard (app bus)', path: 'audiocontext', processing: 'off', resampled: hostRate() > 0 && hostRate() !== rate, sideOffsetSeconds: startSeconds, side: true,
+      // 揃いの精度：Worker（timestamp で切る）なら標本単位、worklet（AudioContext 経由）なら ±10 ms ほど
+      sideAlign: side.mode === 'worker' ? 'sample' : 'approx' },
   });
   if (!track) return;
   track.side = 'keyboard';
@@ -738,7 +740,8 @@ export async function addSideTake(recorded) {
   updateSessionUi();
   rebuildLanes();
   if (side.capped) showNotice(T('keyboard の音は 1 GB で打ち止めにしました（本線はそのまま録れています）。'), true);
-  else showNotice(T('keyboard の音（メトロノーム・伴奏・鍵盤）は別トラック「{name}」に入れました。マイクの録りには混ぜていません。要らなければ消音か外すで。', { name }), false);
+  else showNotice(T('keyboard の音（メトロノーム・伴奏・鍵盤）は別トラック「{name}」に入れました。マイクの録りには混ぜていません。要らなければ消音か外すで。', { name })
+    + (side.mode === 'worklet' ? T('　この環境（生取得なし）では揃いは ±10 ms ほどです。') : ''), false);
 }
 
 /**
@@ -975,7 +978,7 @@ export function provenanceText() {
       lines.push('  ' + T('録った時刻：') + p.at);
       lines.push('  ' + T('入り口：') + (p.side ? T('keyboard のアプリ音バス（別トラック）') : p.device));
       lines.push('  ' + T('道：') + (p.path === 'raw' ? T('生フレーム取得（AudioContext を通らない。再標本化なし）') : T('AudioContext 経由') + (p.resampled ? T('（⚠ 再標本化あり）') : '')) + `　${p.captureRate} Hz`);
-      if (p.side) lines.push('  ' + T('置いた位置：本線の先頭から {sec} 秒（押す前の音＋奏者が聞くまでの遅れ）', { sec: (p.sideOffsetSeconds || 0).toFixed(3) }));
+      if (p.side) lines.push('  ' + T('置いた位置：本線の先頭から {sec} 秒（押す前の音＋奏者が聞くまでの遅れ）', { sec: (p.sideOffsetSeconds || 0).toFixed(3) }) + (p.sideAlign === 'sample' ? T('／揃い：標本単位（timestamp）') : p.sideAlign === 'approx' ? T('／揃い：±10 ms ほど（AudioContext 経由）') : ''));
       lines.push('  ' + T('ブラウザの加工：') + (p.processing === 'off' ? T('すべて切') : p.processing === 'unknown' ? T('不明（ブラウザが答えない）') : T('⚠ 残っている')));
       lines.push('  ' + T('届いたビット数：') + (p.bits === 16 ? '⚠ 16bit' : p.bits === 24 ? '24bit' : p.bits === 32 ? T('float（整数の刻みに乗っていない）') : T('未確定')));
       if (p.verify) lines.push('  ' + T('経路の検証：') + (p.verify === 'identical' ? T('2つの道で 1 サンプルも違わず一致') : p.verify));
