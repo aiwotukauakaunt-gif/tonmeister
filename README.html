@@ -159,16 +159,13 @@
   </ol>
 </nav>
 
-<p><strong>トーンマイスター</strong>。ドイツ語で「録音技師」。
-「実際に鳴っている音にできるだけ寄せる」ことを最優先にした録音アプリ。
+<p>「実際に鳴っている音にできるだけ寄せる」ことを最優先にした録音アプリ。
 Windows デスクトップ版 → Web 版 → スマホ版 の順に作る。</p>
 <ul>
 <li><strong>Windows デスクトップ版</strong> … このページ。<code>app\Tonmeister.exe</code></li>
 <li><strong>Web 版</strong> … <code>web/</code>（<a href="web/README.md">web/README.md</a>）。<code>node web/serve.js</code> で開く。
   生フレーム取得（再標本化ゼロ）・True Peak・OPFS への同期追記・「素／仕上げ」の2層（段階ダイヤル・ホールの響き・盛り度の実測・B で瞬時に素）。keyboard への統合はこちらが元になる</li>
 </ul>
-<p>画面上の題字は、ドイツの扉ページにならって疎組の <code>T O N M E I S T E R</code> と、
-細い金の罫をはさんだ和文の副題 <code>録　音</code> の二段。</p>
 <h2 id="s1">起動</h2>
 <p>デスクトップの <strong>「Tonmeister」ショートカット</strong> をダブルクリック。
 実体は <code>app\Tonmeister.exe</code>（単体ファイル・.NET 7 ランタイム必要）。</p>
@@ -414,22 +411,10 @@ Windows デスクトップ版 → Web 版 → スマホ版 の順に作る。</p
 トラック同士の大きさを目で比べられなくなる。dB の目盛りなら両方成り立つ。</p>
 <p>一度読んだ波形は覚えておき、タブを行き来しても読み直さない。</p>
 <h3>見た目</h3>
-<p>19世紀ドイツの譜面や楽器の箔押しから借りている。<strong>黒漆に金。</strong></p>
-<p>意匠は<strong>図像と構造だけ</strong>で出している。国章・軍章の類（鷲・十字）は、
-いまの目には政治的な記号に見えるので使わない。代わりに同時代の民生品の意匠を借りる:</p>
-<ul>
-<li><strong>銘板と鋲</strong> — 題字は枠を回し、四隅に鋲を打った真鍮の銘板として置く</li>
-<li><strong>彫金の地紋（ギヨシェ）</strong> — 録音ボタンの背後に、旋盤で引いた唐草の連続曲線を薄く敷く。
-  紙幣・銘板・時計の文字盤に使われた彫り方</li>
-<li><strong>太細罫</strong> — 帯の下は太い罫の下に間を置いて細い罫。19世紀の扉ページの組み方</li>
-<li><strong>花形の締め</strong> — 版面の末尾を罫と放射の花形で閉じる</li>
-<li><strong>節見出しの金罫</strong> — 「詳しい設定」の各節を一本の細い金罫で切る</li>
-</ul>
-<p>色は3つしか使わない。</p>
+<p>黒地に金の3色だけで意味を分けている。</p>
 <table>
 <thead>
 <tr>
-<th></th>
 <th>色</th>
 <th>意味</th>
 </tr>
@@ -437,48 +422,25 @@ Windows デスクトップ版 → Web 版 → スマホ版 の順に作る。</p
 <tbody>
 <tr>
 <td><strong>金</strong></td>
-<td><code>#C9A227</code>（明 <code>#E3C766</code> / 鈍 <code>#8A6E1E</code>）</td>
 <td>正しい・選ばれている・良好</td>
 </tr>
 <tr>
 <td><strong>深紅</strong></td>
-<td><code>#7E2A22</code>（明 <code>#A03A2E</code>）</td>
 <td>録音・危険</td>
 </tr>
 <tr>
 <td><strong>象牙</strong></td>
-<td><code>#EDE6D6</code> / 副 <code>#B3A98F</code> / 注釈 <code>#847A64</code></td>
 <td>文字</td>
 </tr>
 </tbody>
 </table>
-<p>地は黒漆 <code>#0C0B09</code>、面 <code>#15130F</code>、罫 <code>#332D20</code>、強い罫は金 <code>#8A6E1E</code>。
-警告だけは赤銅 <code>#B06A2C</code> を使い、金と混ざらないようにしている。</p>
-<p>第二の色として<strong>ベルリン藍</strong>（プルシアンブルー <code>#22406B</code> / <code>#4E7CB5</code>）を使う。
-18世紀のベルリンで作られた顔料で、19世紀の製図や紙幣に広く使われた。
-役割は「音のこの区間を選んでいる」— 金（＝設定が正しい）とぶつからないよう分けてある。</p>
-<ul>
-<li>欧文は <strong>Palatino Linotype</strong>、和文は <strong>游明朝</strong>、数字と時間は <strong>Courier New</strong>（活字と打鍵機の名残）</li>
-<li><strong>発光は使わない。</strong> 光るふちや影のかわりに、余白と細い金の罫、そして二重罫（金・地・鈍い金）で格を出す</li>
-<li>角丸はほぼ落とし（2px）、押しボタンは金の箔押しの小札として扱う</li>
-<li>選ばれているタブ・録りの丸ボタン・書き出しの札はすべて金地に黒文字。<strong>深紅は録音のためだけに取ってある</strong></li>
-<li>録音ボタンは黒地に浮かぶ深紅の円盤で、太い金の輪が縁を締め、その外周が入力レベルの目盛りを兼ねる</li>
-<li>録音中の画面は、広い黒の中に経過時間だけが立つ</li>
-</ul>
-<p><strong>ドイツ的な意匠</strong></p>
-<ul>
-<li>題字は<strong>疎組（Sperrsatz）</strong>。<code>T O N M E I S T E R</code> と字間を空け、その下に細い金の罫、さらに下に副題を中央で受ける</li>
-<li>帯の下は<strong>二重罫</strong>（金・地・鈍い金）。1本のグラデーションブラシで描いている</li>
-<li>「詳しい設定」の節見出しには、下に<strong>細い金の罫</strong>を一本ずつ入れて段を切る</li>
-<li>「録る」画面の末尾は、印刷所の飾り罫にならって <strong>罫—菱形—罫</strong> で締める</li>
-</ul>
-<p>言葉づかいは変えていない。<strong>見た目だけが古く、書いてあることは平易なまま。</strong></p>
+<p>警告は赤銅、波形の選択範囲は藍。光る効果は使わず、余白と細い罫で区切る。</p>
 <h2 id="s5">使い方</h2>
 <h3>1本目を録る</h3>
 <ol>
 <li>起動すると自動でマイクにつながり、メーターが動き出す
    （つながらないときは状態ピルの「変える」→「詳しい設定」で選ぶ）</li>
-<li>楽器をいちばん強く鳴らして、メーターが<strong>金の帯（−12〜−6 dBFS）</strong>に収まるよう機材側で調整。
+<li>楽器をいちばん強く鳴らして、メーターが<strong>金の帯（−18〜−8 dBTP）</strong>に収まるよう機材側で調整。
    帯から外れていれば、メーターの下に何をすればよいかが出る</li>
 <li>「録音する」（Space でも可）→「■ 録音をやめる」（Esc / Space）</li>
 </ol>
@@ -597,7 +559,7 @@ ASIO のオーディオI/Fを使う場合や、I/F 側のダイレクトモニ�
    1.5 秒以上まったく振れなければ「音が出ていません」と出る。</p>
 <ol>
 <li><strong>録れている音が小さすぎる</strong>
-   目標は最大音で <strong>−12〜−6 dBFS</strong>。これを大きく下回ると、
+   目標は最大音で <strong>−18〜−8 dBTP</strong>。これを大きく下回ると、
    Windows 側の音量を上げてもまだ小さい。
    「音のチェック」→「録った音を調べる」で、そのトラックのいちばん大きいところが分かる。</li>
 </ol>
@@ -756,20 +718,16 @@ desktop/InstRecorder/
   SessionsWindow.xaml(.cs)    録音一覧
   MeterScale.cs               dBFS → メーター位置の目盛り
   LatencyMeasure.cs           ズレ合わせ測定の共通の流れ
-  Theme.xaml                  共通のテーマ（黒漆と金・色と書体と部品の見た目）
+  Theme.xaml                  共通のテーマ（色と書体と部品の見た目）
   App.xaml.cs                 起動・例外記録・各種テストモード
   MultiTest.cs / AnalysisTest.cs / EditTest.cs / Probe.cs   開発用の検証コード
 </code></pre>
 <h2 id="s8">この先の予定</h2>
 <ul>
-<li>~~<strong>Web 版</strong>~~ … 出来た。<code>web/</code> にある（<a href="web/README.md">web/README.md</a>）。
-  ブラウザの自動ゲイン補正・ノイズ抑制・エコーキャンセルを明示的に切り、
-  <strong>実際に切れたかを鳴らして測る</strong>検査を載せてある。再標本化が入っていれば状態ピルに出る。
-  録音・多重録音・テイク・ズレ合わせ・波形編集・パンチイン・後処理・書き出し・音のチェックまで、
-  この画面と同じものが動く（ASIO / WASAPI 排他と FLAC は仕組み上ない）</li>
-<li><strong>同時多入力録音</strong>: 多入力I/Fの複数チャンネルを同時に別トラックへ。トラック管理の土台は出来ているので録音モードを1つ足すだけ（※検証には多入力I/Fが必要）</li>
-<li><strong>チューナー / メトロノーム</strong>（保留中）</li>
-<li><strong>スマホ版</strong>（※ビルド環境が無いため未着手）</li>
+<li><strong>Web 版</strong> … 出来た。<code>web/</code> にある（<a href="web/README.md">web/README.md</a>）。デスクトップ版と同じものに加えて、
+  生フレーム取得・True Peak・素／仕上げ・スイープ測定・BWF・FLAC・持ち込み・PWA まで。ASIO / WASAPI 排他だけは仕組み上ない</li>
+<li><strong>スマホ版</strong> … Web 版が PWA として動く。公開（https）してホーム画面に置く</li>
+<li><strong>デスクトップ版への逆輸入の続き</strong> … 盛り度・スイープ測定・経路の格</li>
 </ul>
 <h2 id="s9">既知の制約</h2>
 <ul>
