@@ -148,6 +148,17 @@ export const EN = {
   'スピーカー（PC のでも可）を楽器の位置に置き、マイクはいつも録る位置に。5 秒のスイープが鳴ります。帯域ごとの響きの長さ、近い面からの初期反射（何 cm 先か）、フラッターエコーを出します。': 'Put a speaker (the PC one is fine) where the instrument sits and the mic where you record. A 5-second sweep plays. Reports decay per band, early reflections (how many cm away), and flutter echo.',
   'ループバック：インターフェース＋Windows の往復': 'Loopback: interface + Windows round trip', '部屋とマイク位置': 'Room and mic placement', '1 kHz：歪みと雑音': '1 kHz: distortion and noise',
   '平均の大きさ（RMS）': 'Average level (RMS)', '低域の膨らみ（40〜200 Hz − 500〜2k）': 'Low-end bloom (40–200 Hz − 500–2k)', '明るさ（4〜12 kHz − 500〜2k）': 'Brightness (4–12 kHz − 500–2k)', '電源ハム（床より）': 'Mains hum (above floor)', 'L/R の距離差': 'L/R distance',
+  // 少なく見せる画面
+  'このトラックの仕上げ': 'Finish for this track', 'ほかの測り方 ▸': 'More checks ▸', 'ほかの測り方 ▾': 'More checks ▾',
+  'くわしい設定 ▸': 'Advanced ▸', 'くわしい設定 ▾': 'Advanced ▾', '加工・通り道・チャンネル・フォルダ・出力機器・ズレ合わせ・較正・起動・置き場所': 'processing · path · channels · folder · output · latency · calibration · startup · storage',
+  'メニュー': 'Menu', 'ほかにできること': 'More', 'English': 'English', '日本語': '日本語',
+  'この経路で素のまま録れるか（◎ そのまま／○ ほぼ／△ 手当てが要る）。押すと理由が出ます': 'Can this path record the raw sound? (◎ yes / ○ almost / △ needs attention). Click for details',
+  '経路の格：開いた瞬間に測る。手当てが要るときだけ自動で開き、それ以外は印を押したときだけ': '',
+  '入力の音が {n} 回落ちています（合計 {ms} ms）。PC が重いか、機器のバッファが小さすぎます。': 'The input dropped {n} times ({ms} ms in total). The PC is busy or the device buffer is too small.',
+  '裏に回っていた間も録れています（落ちた音 {n} 回）。': 'Kept recording in the background ({n} drops).',
+  '長くなったので次の受け皿に切り替えました（{n} 本目）。音は1つも落としていません。止めると続きのトラックとして並びます。': 'Rolled over to a new file ({n}). No samples lost; the continuation appears as a following track when you stop.',
+  'ズレ合わせを自動で測りました：往復 {ms} ms。': 'Latency measured automatically: round trip {ms} ms.',
+  '置き場所の空きが少なく、あと約 {min} 分しか録れません。古い録音を「録音一覧」で消すか、丸ごと書き出して外へ移してください。': 'Storage is nearly full — about {min} minutes left. Delete old recordings or export them.',
   // 一般
   '録音・再生を止めてから読み込んでください。': 'Stop recording or playback before importing.', 'まだ書き出すものがありません。': 'Nothing to export yet.',
   '録音・再生を止めてから書き出してください。': 'Stop recording or playback before exporting.', 'ファイルがありません。': 'No files.',

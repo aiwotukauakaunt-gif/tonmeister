@@ -106,7 +106,6 @@ export function updateTabs() {
   setText(badge, n === 0 ? T('まだ0本') : T('{n}本', { n }));
   badge.classList.toggle('has', n > 0);
 
-  show($('#btn-check'), !rec);
   show($('#btn-export'), !rec);
 }
 
@@ -744,6 +743,7 @@ export function updateAlignPill() {
   const btn = $('#btn-align');
   setText(btn, T(measured ? 'ズレ合わせ 済' : 'ズレ合わせ 未測定'));
   btn.className = 'btn btn-small align-pill ' + (measured ? 'measured' : 'unmeasured');
+  show(btn, !measured);   // 揃っているのが普通なので、済んでいれば黙っている
   const ms = engine.sampleRate ? state.settings.latencyFrames / engine.sampleRate * 1000 : 0;
   btn.title = measured
     ? `往復 ${ms.toFixed(0)} ms ぶん詰めて録ります。押すと測り直します。`
@@ -825,10 +825,11 @@ export async function updateStorageLeft() {
     : minutes >= 1 ? `あと約 ${Math.round(minutes)} 分 録れます（空き ${gb} GB）` : `⚠ 置き場所がほぼいっぱいです（空き ${gb} GB）`;
   setText(el, text);
   el.classList.toggle('warn', minutes < 10);
+  show(el, minutes < 30);   // 余裕があるときは黙っている
   state.storageMinutes = minutes;
   if (minutes < 10 && !state.storageWarned) {
     state.storageWarned = true;
-    showNotice(`置き場所の空きが少なく、あと約 ${Math.max(0, Math.round(minutes))} 分しか録れません。古い録音を「録音一覧」で消すか、丸ごと書き出して外へ移してください。`, true, '録音一覧', openSessions);
+    showNotice(T('置き場所の空きが少なく、あと約 {min} 分しか録れません。古い録音を「録音一覧」で消すか、丸ごと書き出して外へ移してください。', { min: Math.max(0, Math.round(minutes)) }), true, T('録音一覧'), openSessions);
   }
 }
 
@@ -961,8 +962,15 @@ export async function assessNow() {
 export function renderGrade() {
   const r = state.grade;
   const box = $('#path-grade');
-  if (!r) { show(box, false); return; }
-  show(box, true);
+  const pill = $('#pill-grade');
+  if (!r) { show(box, false); show(pill, false); return; }
+  // 印はいつも状態ピルに。詳しい箱は「手当てが要る」ときだけ自動で開く（それ以外は印を押したとき）
+  show(pill, true);
+  show($('#status-dot'), false);   // 格の印が丸の代わりになる
+  setText(pill, r.grade);
+  pill.className = 'pill-grade ' + (r.grade === '◎' ? '' : r.grade === '○' ? 'soft' : 'bad');
+  if (r.grade === '△' && !state.gradeDismissed) show(box, true);
+  else if (state.gradeAuto !== false && r.grade !== '△') show(box, false);
   const mark = $('#txt-grade-mark');
   setText(mark, r.grade);
   mark.className = 'grade-mark ' + (r.grade === '◎' ? '' : r.grade === '○' ? 'soft' : 'bad');
@@ -1062,7 +1070,7 @@ export function guardRecording() {
       document.title = 'Tonmeister — 録音';
       if (engine.isRecording) {
         await acquireWakeLock();
-        showNotice(`裏に回っていた間も録れています（落ちた音 ${engine.gapCount} 回）。`, engine.gapCount > 0);
+        showNotice(T('裏に回っていた間も録れています（落ちた音 {n} 回）。', { n: engine.gapCount }), engine.gapCount > 0);
       }
     } else if (engine.isRecording) {
       document.title = '● 録音中 — Tonmeister';
@@ -1074,9 +1082,9 @@ export function guardRecording() {
   engine.onGap = (m) => {
     if (engine.isRecording) return;   // 録音中は録音中バーの数で見せる
     // 録っていないときに落ちたら、状態ピルで静かに知らせる（機器や PC が詰まっているサイン）
-    if (m.gapCount === 1 || m.gapCount % 10 === 0) showNotice(`入力の音が ${m.gapCount} 回落ちています（合計 ${(m.lostFrames / engine.recordRate * 1000).toFixed(0)} ms）。PC が重いか、機器のバッファが小さすぎます。`, true);
+    if (m.gapCount === 1 || m.gapCount % 10 === 0) showNotice(T('入力の音が {n} 回落ちています（合計 {ms} ms）。PC が重いか、機器のバッファが小さすぎます。', { n: m.gapCount, ms: (m.lostFrames / engine.recordRate * 1000).toFixed(0) }), true);
   };
-  engine.onRollover = (n) => showNotice(`長くなったので次の受け皿に切り替えました（${n + 1} 本目）。音は1つも落としていません。止めると続きのトラックとして並びます。`, false);
+  engine.onRollover = (n) => showNotice(T('長くなったので次の受け皿に切り替えました（{n} 本目）。音は1つも落としていません。止めると続きのトラックとして並びます。', { n: n + 1 }), false);
 }
 
 export async function acquireWakeLock() {
@@ -1104,7 +1112,7 @@ export async function autoMeasureLatency() {
       s.latencyFrames = result.frames;
       s.latencyMeasured = true;
       await store.setSettings(s);
-      showNotice(`ズレ合わせを自動で測りました：往復 ${(result.frames / engine.recordRate * 1000).toFixed(0)} ms。`, false);
+      showNotice(T('ズレ合わせを自動で測りました：往復 {ms} ms。', { ms: (result.frames / engine.recordRate * 1000).toFixed(0) }), false);
     } else {
       showNotice('ズレ合わせを自動で測れませんでした（テスト音がマイクに届いていません）。重ねて録るときは「ズレ合わせ」を押して測ってください。', false);
     }

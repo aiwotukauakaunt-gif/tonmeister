@@ -139,7 +139,7 @@ export function platformNotes() {
 export function updateLangButton() {
   const b = $('#btn-lang');
   if (!b) return;
-  setText(b, currentLang() === 'en' ? '日本語' : 'EN');
+  setText(b, currentLang() === 'en' ? '日本語' : 'English');
   b.title = currentLang() === 'en' ? '日本語で表示' : 'Show in English';
 }
 

@@ -66,6 +66,7 @@ export function updateFinishUi() {
   $('#lst-finished').classList.toggle('finished', !pure);
   $('#lst-finished').disabled = !has;
   $('#lst-finished').title = has ? '仕上げを通した音を聞きます' : 'まだ何も盛っていないので、素と同じ音です';
+  show($('.tp-listen'), has);
 
   // 段階ダイヤル
   const custom = f.mode === 'custom' && has;
@@ -112,6 +113,8 @@ export function updateFinishUi() {
   }
   $('#btn-measure-finish').disabled = !has || s.tracks.length === 0;
   $('#btn-hold-pure').disabled = !has;
+  show($('#pnl-grade'), has);
+  show($('#txt-finish-state'), has);
 
   setText($('#txt-finish-state'), has
     ? (currentLang() === 'en'

@@ -83,7 +83,7 @@
 html,body{height:100%}
 body{
   margin:0; background:var(--bg); color:var(--fg);
-  font-family:var(--ui); font-size:14px; line-height:1.5;
+  font-family:var(--ui); font-size:15px; line-height:1.6;
   overflow:hidden;
   -webkit-font-smoothing:antialiased;
 }
@@ -91,9 +91,9 @@ button,input,select{font-family:inherit;font-size:inherit;color:inherit}
 ::selection{background:#3A2F12}
 .mono{font-family:var(--mono)}
 .dim{color:var(--fg-dim)}
-.faint{color:var(--fg-faint);font-size:11.5px}
+.faint{color:var(--fg-faint);font-size:12.5px}
 .gold{color:var(--good)}
-.small{font-size:11.5px}
+.small{font-size:12.5px}
 .center{text-align:center}
 .spacer{flex:1}
 .ml8{margin-left:8px}.ml10{margin-left:10px}.ml12{margin-left:12px}.ml14{margin-left:14px}
@@ -208,7 +208,7 @@ button,input,select{font-family:inherit;font-size:inherit;color:inherit}
 .btn-dashed:hover:not(:disabled){background:#1A1712}
 .btn.is-rec{background:var(--rec);border-color:var(--rec);color:#fff;font-weight:bold}
 .btn.is-rec:hover:not(:disabled){background:var(--rec-bright)}
-.linkbtn{background:none;border:0;color:var(--sel);font-size:11.5px;cursor:pointer;padding:0;margin-left:12px}
+.linkbtn{background:none;border:0;color:var(--sel);font-size:12.5px;cursor:pointer;padding:0;margin-left:12px}
 
 /* 運搬（再生・停止） */
 .btn-transport{
@@ -467,7 +467,7 @@ canvas.ring{position:absolute;width:290px;height:290px;pointer-events:none}   /*
 .insp-scroll{flex:1;overflow-y:auto;min-height:0}
 .sec-title{font-size:12.5px;font-weight:bold;margin:0 0 6px}
 .gold-rule{height:1px;background:var(--brass-deep);opacity:.55;margin:0 0 10px}
-.sub{font-size:12.5px;color:var(--fg-dim);line-height:19px;margin:0;white-space:pre-wrap}
+.sub{font-size:13.5px;color:var(--fg-dim);line-height:21px;margin:0;white-space:pre-wrap}
 .card{background:var(--plate-fill);border:1px solid var(--line);border-radius:2px;padding:14px}
 .card-title{display:block;font-size:12px;font-weight:600;margin-bottom:6px}
 .sunken-card{background:var(--sunken);border:1px solid var(--line);border-radius:6px;padding:11px 13px}
@@ -730,3 +730,25 @@ dialog.tall{height:88vh}
   font:inherit;font-size:18px;padding:18px 34px;background:var(--rec);color:#F2ECDD;border:2px solid var(--good);border-radius:2px;letter-spacing:.1em;
 }
 .tap-start p{color:var(--fg-dim);font-size:13px;margin-top:14px;text-align:center;padding:0 24px}
+
+/* ============ 少なく見せる ============ */
+.menu-btn{font-size:18px;line-height:1;padding:0 12px;min-width:40px}
+.menu-rule{border:0;border-top:1px solid var(--line);margin:4px 0}
+.popup{min-width:260px}
+.menu-item{font-size:14px;padding:9px 14px}
+.pill-grade{
+  font-size:15px;line-height:1;margin:0 8px 0 4px;color:var(--good);cursor:pointer;font-weight:normal;
+}
+.pill-grade.soft{color:var(--warn)} .pill-grade.bad{color:var(--rec-bright)}
+.btn.more{min-width:44px;padding:0 12px;letter-spacing:.2em}
+.card{padding:16px}
+.card-title{font-size:14px;margin-bottom:10px}
+.switch-row{padding:9px 0;font-size:13.5px}
+.sec-head b{font-size:14.5px}
+#btn-settings-advanced{justify-content:flex-start;text-align:left;height:auto;padding:10px 14px}
+#btn-settings-advanced .faint{font-weight:normal}
+.dial-step span{font-size:13px}
+.grade-title{font-size:13.5px}
+.verdict{font-size:14.5px}
+.inspector .sub{font-size:13px}
+.pill{flex-wrap:wrap;row-gap:4px}

@@ -108,12 +108,22 @@ export function wireEvents() {
   $('#btn-align').onclick = measureLatency;
   $('#btn-toast-measure').onclick = async () => { show($('#align-toast'), false); await stopAll(); await measureLatency(); };
 
-  $('#btn-check').onclick = openDiagnostics;
+  $('#btn-check').onclick = () => { show($('#list-popup'), false); openDiagnostics(); };
   $('#btn-check2').onclick = openDiagnostics;
+  $('#btn-menu-measure').onclick = () => { show($('#list-popup'), false); openMeasure(); };
+  $('#btn-menu-compare').onclick = () => { show($('#list-popup'), false); openCompare(); };
+  $('#btn-more-record').onclick = () => { const p = $('#pnl-more-record'); show(p, p.hidden); show($('#txt-monitor-info'), !p.hidden && engine.isOpen); };
+  $('#btn-more-diag').onclick = () => { const p = $('#pnl-more-diag'); show(p, p.hidden); setText($('#btn-more-diag'), p.hidden ? 'ほかの測り方 ▸' : 'ほかの測り方 ▾'); };
+  $('#btn-settings-advanced').onclick = () => {
+    const p = $('#pnl-settings-advanced');
+    show(p, p.hidden);
+    $('#btn-settings-advanced').firstChild.textContent = p.hidden ? 'くわしい設定 ▸' : 'くわしい設定 ▾';
+  };
+  $('#pill-grade').onclick = () => { const g = $('#path-grade'); show(g, g.hidden); };
   $('#btn-export').onclick = openExport;
   $('#btn-export-2').onclick = openExport;
-  $('#btn-settings').onclick = openSettings;
-  $('#btn-lang').onclick = toggleLang;
+  $('#btn-settings').onclick = () => { show($('#list-popup'), false); openSettings(); };
+  $('#btn-lang').onclick = () => { show($('#list-popup'), false); toggleLang(); };
   $('#btn-change-input').onclick = openSettings;
   $('#btn-edit-track').onclick = openEditor;
   $('#btn-remove-track').onclick = removeTrack;
